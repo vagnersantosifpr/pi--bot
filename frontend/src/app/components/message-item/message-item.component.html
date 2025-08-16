@@ -1,0 +1,12 @@
+<!-- src/app/components/message-item/message-item.component.html -->
+<div class="message-bubble" [ngClass]="'role-' + message.role">
+  <!-- Indicador de "digitando..." -->
+  <div *ngIf="message.role === 'loading'" class="typing-indicator">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  
+  <!-- Texto da mensagem -->
+  <p *ngIf="message.role !== 'loading'">{{ message.text }}</p>
+</div>

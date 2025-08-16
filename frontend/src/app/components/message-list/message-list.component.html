@@ -1,0 +1,7 @@
+<!-- src/app/components/message-list/message-list.component.html -->
+<div class="message-list-container" #scrollContainer>
+  <app-message-item 
+    *ngFor="let msg of messages" 
+    [message]="msg">
+  </app-message-item>
+</div>

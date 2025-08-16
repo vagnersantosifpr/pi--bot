@@ -1,0 +1,11 @@
+<!-- src/app/components/message-input/message-input.component.html -->
+<form (ngSubmit)="submitMessage()" class="input-container">
+  <input 
+    type="text" 
+    [(ngModel)]="messageText" 
+    name="messageText"
+    placeholder="Digite sua pergunta..."
+    autocomplete="off"
+  >
+  <button type="submit" [disabled]="!messageText.trim()">Enviar</button>
+</form>
