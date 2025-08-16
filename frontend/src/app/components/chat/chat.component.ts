@@ -1,19 +1,26 @@
 // src/app/components/chat/chat.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild,   ElementRef } from '@angular/core';
 import { ChatApiService } from '../../services/chat-api.service';
 import { Message } from '../../message.model';
 import { v4 as uuidv4 } from 'uuid'; // Precisaremos de uma lib de UUID
+import { MessageListComponent } from '../message-list/message-list.component'; // <-- IMPORTAR
+import { MessageInputComponent } from '../message-input/message-input.component'; // <-- IMPORTAR
 
 @Component({
   selector: 'app-chat',
+  standalone: true, // <-- ESSENCIAL
+  imports: [MessageListComponent, MessageInputComponent], // <-- ADICIONAR
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit {
   messages: Message[] = [];
   userId: string = '';
+  private shouldScrollDown = false; // Flag para controlar a rolagem
 
-  constructor(private chatApi: ChatApiService) {}
+  @ViewChild('messagesArea') private messagesArea!: ElementRef;
+
+  constructor(private chatApi: ChatApiService) { }
 
   ngOnInit(): void {
     // Gera ou recupera um userId único para o usuário
@@ -23,8 +30,18 @@ export class ChatComponent implements OnInit {
     // Mensagem inicial de boas-vindas
     this.messages.push({
       role: 'model',
-      text: 'Olá! Sou o AssisBot, seu assistente de convivência do IFPR. Como posso ajudar você hoje?'
+      text: 'Daí! Eu sou o E.L.O., mas pode me chamar de Piá-bot. Sou seu canal de apoio aqui no IFPR. Manda a braba aí, no que posso te ajudar?'
     });
+  }
+
+  
+
+  ngAfterViewChecked(): void {
+    // Este método é chamado após cada verificação de mudança de view.
+    if (this.shouldScrollDown) {
+      this.scrollToBottom();
+      this.shouldScrollDown = false; // Reseta a flag
+    }
   }
 
   handleSendMessage(text: string): void {
@@ -50,4 +67,20 @@ export class ChatComponent implements OnInit {
       }
     });
   }
+
+  private scrollToBottom(): void {
+    // Usamos um pequeno timeout para garantir que o DOM foi totalmente atualizado
+    // antes de tentarmos rolar. Sem isso, a rolagem pode acontecer antes da
+    // nova mensagem ter sua altura final calculada.
+    setTimeout(() => {
+      try {
+        const container = this.messagesArea.nativeElement;
+        container.scrollTop = container.scrollHeight;
+      } catch (err) {
+        console.error('Erro ao rolar a view:', err);
+      }
+    }, 0);
+  }
+
+
 }

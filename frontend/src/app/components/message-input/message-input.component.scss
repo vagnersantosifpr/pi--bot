@@ -1,37 +1,39 @@
-// src/app/components/message-input/message-input.component.scss
+/* src/app/components/message-input/message-input.component.scss */
 .input-container {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 
   input {
-    flex: 1;
+    flex-grow: 1;
     border: 1px solid #ccc;
     border-radius: 20px;
-    padding: 10px 16px;
+    padding: 10px 15px;
     font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+
     &:focus {
-      outline: none;
-      border-color: #00796b;
+      border-color: #008069;
     }
   }
 
   button {
-    background-color: #00796b;
-    color: white;
     border: none;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
+    background-color: #008069;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 1rem;
+    font-weight: 500;
     transition: background-color 0.2s;
-    &::after { content: '➤'; transform: rotate(-90deg); }
-    &:hover { background-color: #004d40; }
+
+    &:hover:not(:disabled) {
+      background-color: #006654;
+    }
+
     &:disabled {
-      background-color: #bdbdbd;
+      background-color: #a5d6a7;
       cursor: not-allowed;
     }
   }

@@ -1,12 +1,15 @@
 <!-- src/app/components/message-item/message-item.component.html -->
-<div class="message-bubble" [ngClass]="'role-' + message.role">
-  <!-- Indicador de "digitando..." -->
-  <div *ngIf="message.role === 'loading'" class="typing-indicator">
+<div class="message-bubble" [ngSwitch]="message.role">
+  
+  <!-- Caso seja uma mensagem de texto (usuário ou bot) -->
+  <p *ngSwitchCase="'user'">{{ message.text }}</p>
+  <p *ngSwitchCase="'model'">{{ message.text }}</p>
+
+  <!-- Caso seja o indicador de 'loading' -->
+  <div *ngSwitchCase="'loading'" class="loading-indicator">
     <span></span>
     <span></span>
     <span></span>
   </div>
-  
-  <!-- Texto da mensagem -->
-  <p *ngIf="message.role !== 'loading'">{{ message.text }}</p>
+
 </div>

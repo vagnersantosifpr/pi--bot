@@ -9,4 +9,11 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+   // --- ESTILO DO BACKGROUND ---
+   // Essencial para o posicionamento do overlay
+
+  background-image: url('assets/images/pia-bot-bg.jpg'); // <-- VERIFIQUE O CAMINHO
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
 }

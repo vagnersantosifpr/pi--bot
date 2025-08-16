@@ -1,12 +1,14 @@
 <!-- src/app/components/chat/chat.component.html -->
 <div class="chat-container">
   <div class="header">
-    <h2>AssisBot IFPR</h2>
-    <span>Assistente de Convivência</span>
+    <h2>E.L.O. (O Piá-bot)</h2>
+    <span>Canal de Apoio pedagógico e estudantil do IFPR - Campus Assis Chateaubriand</span>
   </div>
-  
-  <!-- ADICIONE ESTA LINHA -->
-  <app-message-list [messages]="messages"></app-message-list>
+
+  <!-- ENVOLVA O COMPONENTE AQUI -->
+  <div class="messages-area" #messagesArea>
+    <app-message-list [messages]="messages"></app-message-list>
+  </div>
 
   <div class="input-area">
     <app-message-input (sendMessage)="handleSendMessage($event)"></app-message-input>

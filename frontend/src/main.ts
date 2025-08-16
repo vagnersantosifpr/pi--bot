@@ -1,7 +1,10 @@
-import { platformBrowser } from '@angular/platform-browser';
-import { AppModule } from './app/app-module';
+// src/main.ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideHttpClient } from '@angular/common/http';
+import { AppComponent } from './app/app.component';
 
-platformBrowser().bootstrapModule(AppModule, {
-  
-})
-  .catch(err => console.error(err));
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideHttpClient() // Maneira moderna de fornecer o HttpClient
+  ]
+}).catch(err => console.error(err));
