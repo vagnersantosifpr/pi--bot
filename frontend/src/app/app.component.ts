@@ -4,7 +4,7 @@ import { ChatComponent } from './components/chat/chat.component'; // Importe o C
 
 @Component({
   selector: 'app-root',
-  standalone: true, // Transforme o AppComponent em standalone
+  //standalone: true, // Transforme o AppComponent em standalone
   imports: [CommonModule, ChatComponent], // Importe o ChatComponent que ele usa no template
   template: `<app-chat></app-chat>`, // Template simplificado
   //styleUrls: ['./app.component.scss']

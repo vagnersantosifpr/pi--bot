@@ -8,7 +8,6 @@ import { MessageInputComponent } from '../message-input/message-input.component'
 
 @Component({
   selector: 'app-chat',
-  standalone: true, // <-- ESSENCIAL
   imports: [MessageListComponent, MessageInputComponent], // <-- ADICIONAR
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']

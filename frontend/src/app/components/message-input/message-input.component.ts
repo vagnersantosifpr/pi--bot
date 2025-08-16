@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms'; // <-- IMPORTAR
 
 @Component({
   selector: 'app-message-input',
-  standalone: true, // <-- ESSENCIAL
+  //standalone: true, // <-- ESSENCIAL
   imports: [FormsModule], // <-- ADICIONAR
   templateUrl: './message-input.component.html',
   styleUrls: ['./message-input.component.scss']

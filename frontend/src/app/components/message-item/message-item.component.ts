@@ -7,7 +7,7 @@ import { MarkdownModule } from 'ngx-markdown'; // <-- Importe o módulo aqui
 
 @Component({
   selector: 'app-message-item',
-  standalone: true, // <-- ESSENCIAL
+  //standalone: true, // <-- ESSENCIAL
   imports: [CommonModule, MarkdownModule], // <-- E adicione aos imports do componente
   templateUrl: './message-item.component.html',
   styleUrls: ['./message-item.component.scss']

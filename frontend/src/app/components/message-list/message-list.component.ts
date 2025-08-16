@@ -8,7 +8,8 @@ import { MarkdownModule } from 'ngx-markdown'; // Verifique se precisa disso par
 
 @Component({
   selector: 'app-message-list',
-  standalone: true, // <-- ESSENCIAL
+  //standalone: true, // <-- ESSENCIAL
+  //imports: [CommonModule, MessageItemComponent, MarkdownModule], // Adicionado MarkdownModule aqui também
   imports: [CommonModule, MessageItemComponent, MarkdownModule], // Adicionado MarkdownModule aqui também
   templateUrl: './message-list.component.html',
   styleUrls: ['./message-list.component.scss']
