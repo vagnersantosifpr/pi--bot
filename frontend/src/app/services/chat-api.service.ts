@@ -13,7 +13,9 @@ export interface ChatResponse {
 })
 export class ChatApiService {
   // URL do nosso backend. Lembre-se que ele está rodando na porta 3000.
-  private readonly apiUrl = 'http://localhost:3000/api/chat';
+  private readonly apiUrl = 'https://pia-bot.onrender.com/api/chat';
+  
+  //private readonly apiUrl = 'http://localhost:3000/api/chat';
 
   constructor(private http: HttpClient) { }
 
