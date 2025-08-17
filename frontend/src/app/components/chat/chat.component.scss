@@ -18,7 +18,7 @@
   overflow: hidden; // Impede que filhos "vazem" do container arredondado
 
   // Essencial para o posicionamento do overlay
-  position: relative; 
+  position: relative;
 
   // --- ESTILO DO BACKGROUND ---
   background-image: url('../../../assets/images/pia-bot-galera.jpg'); // <-- VERIFIQUE O CAMINHO
@@ -41,7 +41,9 @@
 }
 
 // Garante que o conteúdo do chat fique ACIMA da camada de overlay
-.header, .messages-area, .input-area {
+.header,
+.messages-area,
+.input-area {
   position: relative;
   z-index: 1;
 }
@@ -88,12 +90,18 @@
   font-size: 0.8rem;
   color: #555;
 
+  // --- ADICIONE ESTAS DUAS LINHAS ---
+  position: relative; // Necessário para o z-index funcionar
+  z-index: 10; // Coloca este elemento em uma camada superior
+  // ---------------------------------
+
   // --- ADICIONE ESTE BLOCO DE CÓDIGO ---
   input[type="range"] {
     flex: 1; // Diz ao slider para ocupar o espaço flexível disponível
     max-width: 250px; // Adiciona um limite para não ficar gigante em telas grandes
     cursor: pointer;
   }
+
   // ------------------------------------
 
   .temp-label {

@@ -3,10 +3,12 @@ const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Conversation = require('../models/Conversation');
+const Knowledge = require('../models/Knowledge'); // Importa o novo modelo
 
 // Inicializa o cliente do Google AI com a chave da API
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash"}); // Usando o modelo mais recente e rápido
+const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+const generativeModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Usando o modelo mais recente e rápido
 
 // --- NOVA FUNÇÃO DE LÓGICA DE TOM ---
 function getToneInstructions(temperature) {
@@ -43,9 +45,9 @@ Sua missão principal é definida pelo seu nome, E.L.O.: Escuta, Liga e Orienta.
 **Suas Regras Fundamentais de Atuação:**
 1.  **Tom de Voz:** Use um tom de voz ACOLHEDOR, PARCEIRO e DIRETO. Use gírias locais de forma natural, como "piá", "daí", "saca?", "tamo junto", "manda a braba". Evite "pedagoguês" complicado.
 2.  **Acolhimento Primeiro:** Nunca julgue. Sempre comece as respostas com uma frase de acolhimento que mostre que você entendeu a necessidade do estudante. ("Opa, entendi!", "Daí! Boa pergunta.", "Calma, piá! Acontece.").
-3.  **Seja um Elo Confiável:** Suas informações são oficiais e validadas pela Seção Pedagógica (CPAE). Apesar da linguagem informal, a responsabilidade é máxima.
+3.  **Seja um Elo Confiável:** Suas informações são oficiais e validadas pela Seção Pedagógica (SEPAE). Apesar da linguagem informal, a responsabilidade é máxima.
 4.  **Seja Proativo:** Não apenas responda. Se apropriado, sugira próximos passos, como "Que tal dar um pulo lá na sala deles?", "Posso te passar o contato, se quiser.".
-5.  **Prioridade Máxima para Casos Sérios:** Se a conversa mencionar bullying, desrespeito, zoação excessiva, angústia, ansiedade ou qualquer conflito sério, sua ÚNICA e IMEDIATA função é orientar o estudante a procurar a equipe da CPAE. Use uma linguagem empática e de apoio, como no exemplo: "Opa, sinto muito por isso. Ninguém merece passar por essa situação. Bullying e desrespeito são tolerância zero por aqui. Minha principal função agora é te conectar com a galera que pode te ajudar de verdade... O importante é não guardar isso pra você, beleza? Tamo junto!". NÃO tente resolver o problema sozinho.
+5.  **Prioridade Máxima para Casos Sérios:** Se a conversa mencionar bullying, desrespeito, zoação excessiva, angústia, ansiedade ou qualquer conflito sério, sua ÚNICA e IMEDIATA função é orientar o estudante a procurar a equipe da SEPAE. Use uma linguagem empática e de apoio, como no exemplo: "Opa, sinto muito por isso. Ninguém merece passar por essa situação. Bullying e desrespeito são tolerância zero por aqui. Minha principal função agora é te conectar com a galera que pode te ajudar de verdade... O importante é não guardar isso pra você, beleza? Tamo junto!". NÃO tente resolver o problema sozinho.
 6.  **Mantenha o Foco:** Responda apenas a perguntas relacionadas à vida no campus (convivência, dificuldades acadêmicas, assistência estudantil). Se o assunto fugir muito, redirecione a conversa de forma amigável.
 7.  **Base de Conhecimento é Lei:** Suas respostas devem se basear PRIMARIAMENTE nas informações da Base de Conhecimento abaixo. Não invente regras.
 `;
@@ -126,7 +128,30 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'userId e message são obrigatórios.' });
     }
 
-    // Busca a conversa no banco ou cria uma nova se não existir
+    // --- ETAPA 1: BUSCA DE CONHECIMENTO RELEVANTE (RAG) ---
+    console.log('Gerando embedding para a pergunta do usuário...');
+    const queryEmbeddingResult = await embeddingModel.embedContent(message);
+    const queryVector = queryEmbeddingResult.embedding.values;
+
+    console.log('Realizando busca vetorial no MongoDB...');
+    const searchResults = await Knowledge.aggregate([
+      {
+        $vectorSearch: {
+          index: "default", // O nome do índice que você criou no Atlas
+          path: "embedding",
+          queryVector: queryVector,
+          numCandidates: 100, // Número de candidatos a serem considerados na busca
+          limit: 4 // Número de resultados mais relevantes a retornar
+        }
+      }
+    ]);
+
+    // Formata os resultados da busca para usar como contexto
+    const context = searchResults.map(doc => `- ${doc.content}`).join('\n');
+    console.log('Contexto encontrado:', context);
+
+
+    // --- ETAPA 2: GERAÇÃO DA RESPOSTA COM CONTEXTO ---
     let conversation = await Conversation.findOne({ userId });
     if (!conversation) {
       conversation = new Conversation({ userId, messages: [] });
@@ -138,49 +163,54 @@ router.post('/', async (req, res) => {
       parts: [{ text: msg.text }],
     }));
 
-    // Inicia a sessão de chat com o histórico
-    // const chat = model.startChat({
-    //     history: history,
-    //     generationConfig: {
-    //         maxOutputTokens: 500, // Limita o tamanho da resposta
-    //     },
-    // });
+    // const generationConfig = {
+    //   maxOutputTokens: 500,
+    // };
 
-    // **A MUDANÇA PRINCIPAL ESTÁ AQUI**
-    // 1. Inicia o chat com a persona (System Prompt) e o histórico do banco
-    const chat = model.startChat({
-        systemInstruction: {
-            role: "system",
-            parts: [{ text: `${systemPrompt}\n\nBASE DE CONHECIMENTO:\n${knowledgeBase}` }]
-        },
-        history: history,
-        generationConfig: {
-            maxOutputTokens: 500,
-        },
-    });
-
-     // --- GERA A INSTRUÇÃO DE TOM DINÂMICA ---
+    const chat = generativeModel.startChat({ history });
     const toneInstruction = getToneInstructions(temperature);
-
 
     // Monta o prompt completo que será enviado para a IA
     const fullPrompt = `
       ${systemPrompt}
 
-      ${toneInstruction} {/* <-- INJETA A INSTRUÇÃO DE TOM AQUI */}
+      ${toneInstruction} 
 
       ---
-      BASE DE CONHECIMENTO (Use isso como sua fonte principal de verdade):
-      ${knowledgeBase}
+      USE O SEGUINTE CONTEXTO RELEVANTE PARA FORMULAR SUA RESPOSTA:
+      ${context}
       ---
-
+      Com base ESTRITAMENTE no contexto acima, responda à pergunta do usuário. Se a resposta não estiver no contexto, diga que você não tem informações sobre esse tópico específico.
       PERGUNTA DO USUÁRIO: "${message}"
+      
     `;
 
-    // Envia a mensagem para a IA e aguarda a resposta
+
+    // ---
+    // BASE DE CONHECIMENTO (Use isso como sua fonte principal de verdade):
+    // ${knowledgeBase}
+    // ---
+
+    // PERGUNTA DO USUÁRIO: "${message}"
+
+
+
+    // const chat = model.startChat({
+    //   systemInstruction: {
+    //     role: "system",
+    //     parts: [{ text: `${systemPrompt}\n\nBASE DE CONHECIMENTO:\n${knowledgeBase}` }]
+    //   },
+    //   history: history,
+    //   generationConfig: {
+    //     maxOutputTokens: 500,
+    //   },
+    // });
+
+
     const result = await chat.sendMessage(fullPrompt);
     const response = await result.response;
     const botMessage = response.text();
+
 
     // Salva a pergunta do usuário e a resposta do bot no nosso banco de dados
     conversation.messages.push({ role: 'user', text: message });
