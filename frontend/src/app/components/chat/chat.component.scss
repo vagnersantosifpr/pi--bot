@@ -88,9 +88,13 @@
   font-size: 0.8rem;
   color: #555;
 
+  // --- ADICIONE ESTE BLOCO DE CÓDIGO ---
   input[type="range"] {
+    flex: 1; // Diz ao slider para ocupar o espaço flexível disponível
+    max-width: 250px; // Adiciona um limite para não ficar gigante em telas grandes
     cursor: pointer;
   }
+  // ------------------------------------
 
   .temp-label {
     font-weight: 500;
