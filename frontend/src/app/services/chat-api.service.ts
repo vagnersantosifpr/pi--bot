@@ -18,8 +18,8 @@ export class ChatApiService {
 
   constructor(private http: HttpClient) { }
 
-  sendMessage(userId: string, message: string): Observable<ChatResponse> {
-    const body = { userId, message };
+  sendMessage(userId: string, message: string, temperature: number): Observable<ChatResponse> {
+    const body = { userId, message, temperature };
     return this.http.post<ChatResponse>(this.apiUrl, body);
   }
 }

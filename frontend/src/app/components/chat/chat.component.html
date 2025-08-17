@@ -5,6 +5,21 @@
     <span>Canal de Apoio pedagógico e estudantil do IFPR - Campus Assis Chateaubriand</span>
   </div>
 
+  <!-- NOVO CONTROLE DE TEMPERATURA -->
+  <div class="temperature-control">
+    <label for="temperature">Tom da Conversa:</label>
+    <span class="temp-label">Descontraído</span>
+    <input 
+      type="range" 
+      id="temperature" 
+      min="0" 
+      max="1" 
+      step="0.1"
+      [(ngModel)]="chatTemperature"
+      (ngModelChange)="onTemperatureChange()">
+    <span class="temp-label">Respeitoso</span>
+  </div>
+
   <!-- ENVOLVA O COMPONENTE AQUI -->
   <div class="messages-area" #messagesArea>
     <app-message-list [messages]="messages"></app-message-list>

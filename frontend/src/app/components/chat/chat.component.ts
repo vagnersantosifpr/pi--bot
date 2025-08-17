@@ -1,14 +1,23 @@
 // src/app/components/chat/chat.component.ts
 import { Component, OnInit, ViewChild,   ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // <-- 1. IMPORTE O FORMSMODULE
+
+// Imports dos seus componentes e serviços
+import { MessageListComponent } from '../message-list/message-list.component'; // <-- IMPORTAR
+import { MessageInputComponent } from '../message-input/message-input.component'; // <-- IMPORTAR
 import { ChatApiService } from '../../services/chat-api.service';
 import { Message } from '../../message.model';
 import { v4 as uuidv4 } from 'uuid'; // Precisaremos de uma lib de UUID
-import { MessageListComponent } from '../message-list/message-list.component'; // <-- IMPORTAR
-import { MessageInputComponent } from '../message-input/message-input.component'; // <-- IMPORTAR
+
 
 @Component({
   selector: 'app-chat',
-  imports: [MessageListComponent, MessageInputComponent], // <-- ADICIONAR
+  imports: [
+    CommonModule,
+    FormsModule,
+    MessageListComponent,
+    MessageInputComponent], // <-- ADICIONAR
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
@@ -16,6 +25,8 @@ export class ChatComponent implements OnInit {
   messages: Message[] = [];
   userId: string = '';
   private shouldScrollDown = false; // Flag para controlar a rolagem
+
+  chatTemperature: number = 0.5; // Valor padrão neutro
 
   @ViewChild('messagesArea') private messagesArea!: ElementRef;
 
@@ -26,11 +37,21 @@ export class ChatComponent implements OnInit {
     this.userId = localStorage.getItem('assisbot_userId') || uuidv4();
     localStorage.setItem('assisbot_userId', this.userId);
 
+    // Recupera a temperatura salva, se existir
+    const savedTemp = localStorage.getItem('assisbot_temperature');
+    this.chatTemperature = savedTemp ? parseFloat(savedTemp) : 0.5;
+
+
     // Mensagem inicial de boas-vindas
     this.messages.push({
       role: 'model',
       text: 'Daí! Eu sou o E.L.O., mas pode me chamar de Piá-bot. Sou seu canal de apoio aqui no IFPR. Manda a braba aí, no que posso te ajudar?'
     });
+  }
+
+  // Novo método para salvar a temperatura quando o slider muda
+  onTemperatureChange(): void {
+    localStorage.setItem('assisbot_temperature', this.chatTemperature.toString());
   }
 
   
@@ -51,7 +72,7 @@ export class ChatComponent implements OnInit {
     this.messages.push({ role: 'loading', text: '' });
 
     // Chama a API
-    this.chatApi.sendMessage(this.userId, text).subscribe({
+    this.chatApi.sendMessage(this.userId, text, this.chatTemperature).subscribe({
       next: (response) => {
         // Remove o indicador de "carregando"
         this.messages.pop();

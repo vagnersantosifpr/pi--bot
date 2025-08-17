@@ -76,3 +76,23 @@
   border-top: 1px solid #e0e0e0;
   flex-shrink: 0;
 }
+
+.temperature-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f0f2f5;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.8rem;
+  color: #555;
+
+  input[type="range"] {
+    cursor: pointer;
+  }
+
+  .temp-label {
+    font-weight: 500;
+  }
+}

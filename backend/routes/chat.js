@@ -8,6 +8,30 @@ const Conversation = require('../models/Conversation');
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash"}); // Usando o modelo mais recente e rápido
 
+// --- NOVA FUNÇÃO DE LÓGICA DE TOM ---
+function getToneInstructions(temperature) {
+  // Se a temperatura não for fornecida, usamos um padrão neutro (0.5)
+  const temp = temperature === undefined ? 0.5 : temperature;
+
+  if (temp <= 0.3) {
+    // Tom mais jovem e descontraído
+    return `
+      **Instrução de Tom (Descontraído):** Fale como um colega de corredor, de forma bem informal e amigável. Use gírias leves e apropriadas para o ambiente escolar (como "tranquilo", "daora", "se liga") e, se fizer sentido, use emojis como 👍, 😉, ou 😊. O objetivo é ser o mais próximo e acolhedor possível para os estudantes mais novos.
+    `;
+  } else if (temp > 0.3 && temp < 0.7) {
+    // Tom Padrão (Neutro e Amigável)
+    return `
+      **Instrução de Tom (Padrão):** Use o seu tom padrão, que é amigável, prestativo e educativo, conforme definido em suas regras fundamentais.
+    `;
+  } else {
+    // Tom mais formal e respeitoso
+    return `
+      **Instrução de Tom (Respeitoso):** Adote um tom mais formal e polido. Use expressões como "prezado(a) estudante", "por gentileza", "compreendo". Evite gírias e emojis. A comunicação deve ser clara, respeitosa e direta, como a de um servidor experiente orientando um membro valioso da comunidade acadêmica.
+    `;
+  }
+}
+
+
 // ---- INÍCIO DA ENGENHARIA DE PROMPT ----
 
 // 1. A Persona do Piá-bot (baseado no seu manual)
@@ -95,7 +119,7 @@ const knowledgeBase = `
 // Rota principal: POST /api/chat
 router.post('/', async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { userId, message, temperature } = req.body;
 
     // Validação da entrada
     if (!userId || !message) {
@@ -135,9 +159,15 @@ router.post('/', async (req, res) => {
         },
     });
 
+     // --- GERA A INSTRUÇÃO DE TOM DINÂMICA ---
+    const toneInstruction = getToneInstructions(temperature);
+
+
     // Monta o prompt completo que será enviado para a IA
     const fullPrompt = `
       ${systemPrompt}
+
+      ${toneInstruction} {/* <-- INJETA A INSTRUÇÃO DE TOM AQUI */}
 
       ---
       BASE DE CONHECIMENTO (Use isso como sua fonte principal de verdade):
