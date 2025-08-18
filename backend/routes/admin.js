@@ -70,11 +70,59 @@ router.get('/knowledge', async (req, res) => { // <-- VERIFIQUE ESTA FUNÇÃO
   }
 });
 
-router.delete('/knowledge/:id', adminOnly, async (req, res) => { // <-- VERIFIQUE ESTA FUNÇÃO
+router.delete('/knowledge/:id', adminOnly, async (req, res) => {
   try {
-    // ... lógica de delete ...
+    // 1. Pega o ID do item a ser deletado a partir dos parâmetros da URL.
+    const { id } = req.params;
+
+    // 2. Usa o Mongoose para encontrar o documento pelo ID e deletá-lo.
+    const deletedItem = await Knowledge.findByIdAndDelete(id);
+
+    // 3. Verifica se um item foi realmente encontrado e deletado.
+    if (!deletedItem) {
+      // Se findByIdAndDelete não encontra o documento, ele retorna null.
+      return res.status(404).json({ error: 'Item de conhecimento não encontrado.' });
+    }
+
+    // 4. Se tudo deu certo, envia uma resposta de sucesso.
+    res.status(200).json({ message: 'Item de conhecimento deletado com sucesso.' });
+
   } catch (error) {
-    // ...
+    // 5. Se ocorrer qualquer erro inesperado (ex: erro de conexão com o DB), captura-o.
+    console.error('Erro ao deletar item de conhecimento:', error);
+    res.status(500).json({ error: 'Ocorreu um erro interno no servidor.' });
+  }
+});
+
+router.post('/knowledge', adminOnly, async (req, res) => {
+  try {
+    const { source, topic, content } = req.body;
+    if (!source || !topic || !content) {
+      return res.status(400).json({ error: 'Todos os campos (source, topic, content) são obrigatórios.' });
+    }
+
+    // Gera o embedding para o novo conteúdo
+    console.log(`Gerando embedding para o novo tópico: "${topic}"`);
+    const result = await embeddingModel.embedContent(content);
+    const embedding = result.embedding.values;
+
+    // Cria o novo documento no banco de dados
+    const newKnowledgeItem = await Knowledge.create({
+      source,
+      topic,
+      content,
+      embedding,
+    });
+    
+    // Retorna o item criado (sem o vetor gigante do embedding) para o frontend
+    const itemToReturn = newKnowledgeItem.toObject();
+    delete itemToReturn.embedding;
+
+    res.status(201).json(itemToReturn);
+    
+  } catch (error) {
+    console.error('Erro ao adicionar item de conhecimento:', error);
+    res.status(500).json({ error: 'Erro interno ao processar a solicitação.' });
   }
 });
 
