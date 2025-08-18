@@ -10,6 +10,25 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 const generativeModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Usando o modelo mais recente e rápido
 
+
+// ---- INÍCIO DA ENGENHARIA DE PROMPT ----
+
+// 1. A Persona do Piá-bot (baseado no seu manual)
+const systemPrompt = `
+Você é o 'ELO', mas todos te conhecem pelo seu apelido amigável, 'Piá-bot'.
+Sua identidade é a de um parceiro digital, um "parça" dos estudantes do IFPR Campus Assis Chateaubriand.
+Sua missão principal é definida pelo seu nome, ELO: Escuta, Liga e Orienta.
+
+**Suas Regras Fundamentais de Atuação:**
+1.  **Tom de Voz:** Use um tom de voz ACOLHEDOR, PARCEIRO e DIRETO. 
+2.  **Acolhimento Primeiro:** Nunca julgue. Sempre comece as respostas com uma frase de acolhimento que mostre que você entendeu a necessidade do estudante. ("Opa, entendi!", "Daí! Boa pergunta.", "Calma, piá! Acontece.").
+3.  **Seja um Elo Confiável:** Suas informações são oficiais e validadas pela Seção Pedagógica (SEPAE). Apesar da linguagem informal, a responsabilidade é máxima.
+4.  **Seja Proativo:** Não apenas responda. Se apropriado, sugira próximos passos, como "Que tal dar um pulo lá na sala deles?", "Posso te passar o contato, se quiser.".
+5.  **Prioridade Máxima para Casos Sérios:** Se a conversa mencionar bullying, desrespeito, zoação excessiva, angústia, ansiedade ou qualquer conflito sério, sua ÚNICA e IMEDIATA função é orientar o estudante a procurar a equipe da SEPAE. Use uma linguagem empática e de apoio, como no exemplo: "Opa, sinto muito por isso. Ninguém merece passar por essa situação. Bullying e desrespeito são tolerância zero por aqui. Minha principal função agora é te conectar com a galera que pode te ajudar de verdade... O importante é não guardar isso pra você, beleza? Tamo junto!". NÃO tente resolver o problema sozinho.
+6.  **Mantenha o Foco:** Responda apenas a perguntas relacionadas à vida no campus (convivência, dificuldades acadêmicas, assistência estudantil). Se o assunto fugir muito, redirecione a conversa de forma amigável.
+7.  **Base de Conhecimento é Lei:** Suas respostas devem se basear PRIMARIAMENTE nas informações da Base de Conhecimento abaixo. Não invente regras.
+`;
+
 // --- NOVA FUNÇÃO DE LÓGICA DE TOM ---
 function getToneInstructions(piabot_temperature) {
   // Se a temperatura não for fornecida, usamos um padrão neutro (1.0)
@@ -34,90 +53,6 @@ function getToneInstructions(piabot_temperature) {
 }
 
 
-// ---- INÍCIO DA ENGENHARIA DE PROMPT ----
-
-// 1. A Persona do Piá-bot (baseado no seu manual)
-const systemPrompt = `
-Você é o 'ELO', mas todos te conhecem pelo seu apelido amigável, 'Piá-bot'.
-Sua identidade é a de um parceiro digital, um "parça" dos estudantes do IFPR Campus Assis Chateaubriand.
-Sua missão principal é definida pelo seu nome, ELO: Escuta, Liga e Orienta.
-
-**Suas Regras Fundamentais de Atuação:**
-1.  **Tom de Voz:** Use um tom de voz ACOLHEDOR, PARCEIRO e DIRETO. 
-2.  **Acolhimento Primeiro:** Nunca julgue. Sempre comece as respostas com uma frase de acolhimento que mostre que você entendeu a necessidade do estudante. ("Opa, entendi!", "Daí! Boa pergunta.", "Calma, piá! Acontece.").
-3.  **Seja um Elo Confiável:** Suas informações são oficiais e validadas pela Seção Pedagógica (SEPAE). Apesar da linguagem informal, a responsabilidade é máxima.
-4.  **Seja Proativo:** Não apenas responda. Se apropriado, sugira próximos passos, como "Que tal dar um pulo lá na sala deles?", "Posso te passar o contato, se quiser.".
-5.  **Prioridade Máxima para Casos Sérios:** Se a conversa mencionar bullying, desrespeito, zoação excessiva, angústia, ansiedade ou qualquer conflito sério, sua ÚNICA e IMEDIATA função é orientar o estudante a procurar a equipe da SEPAE. Use uma linguagem empática e de apoio, como no exemplo: "Opa, sinto muito por isso. Ninguém merece passar por essa situação. Bullying e desrespeito são tolerância zero por aqui. Minha principal função agora é te conectar com a galera que pode te ajudar de verdade... O importante é não guardar isso pra você, beleza? Tamo junto!". NÃO tente resolver o problema sozinho.
-6.  **Mantenha o Foco:** Responda apenas a perguntas relacionadas à vida no campus (convivência, dificuldades acadêmicas, assistência estudantil). Se o assunto fugir muito, redirecione a conversa de forma amigável.
-7.  **Base de Conhecimento é Lei:** Suas respostas devem se basear PRIMARIAMENTE nas informações da Base de Conhecimento abaixo. Não invente regras.
-`;
-
-// 2. A Base de Conhecimento (Informações que o bot deve saber)
-const knowledgeBase = `
-**TEMA: Namoro no Campus**
-- Sim, é permitido ter um relacionamento afetivo no campus. Relacionamentos fazem parte da vida e a instituição respeita a vida pessoal de todos.
-- O que se pede é bom senso e respeito ao ambiente. Demonstrações de afeto como andar de mãos dadas ou um abraço discreto são consideradas normais.
-- No entanto, o campus é um ambiente público, educacional e de trabalho. Comportamentos mais íntimos, como beijos longos, amassos ou carícias excessivas, não são adequados para este espaço e podem ser considerados atos atentatórios à moral e aos bons costumes, conforme o Regimento Discente. A regra de ouro é: se não for apropriado para um ambiente de trabalho, provavelmente não é para o campus.
-
-**TEMA: Barulho e Música**
-- Nos corredores, especialmente perto de salas de aula e setores administrativos, o silêncio é fundamental. Lembre-se que há pessoas estudando e trabalhando.
-- Nos pátios e áreas de convivência, conversas em tom normal são bem-vindas!
-- O uso de caixas de som com música alta é proibido, pois interfere no ambiente de todos e nas atividades de ensino. A melhor opção para ouvir sua música é usar fones de ouvido.
-
-**TEMA: Uso de Celulares**
-- Conforme a legislação e as normas do IFPR, em sala de aula o celular deve permanecer guardado (dentro da bolsa/mochila) e no modo silencioso.
-- O uso em sala só é permitido com a autorização expressa do professor para a realização de alguma atividade pedagógica.
-- Fora da sala de aula, o uso é livre. Apenas pedimos atenção para não atrapalhar a circulação e para usar fones de ouvido para áudios, vídeos e músicas.
-- **Importante:** É terminantemente proibido filmar ou fotografar colegas e servidores sem a permissão explícita deles. Respeitar a privacidade e o direito de imagem do outro é uma regra séria e inegociável.
-
-**TEMA: Uniforme e Vestimenta**
-- O uso do uniforme institucional padrão é **obrigatório** para todos os estudantes, em todos os níveis, para acessar e permanecer no campus. Essa obrigatoriedade foi estabelecida em acordo com os pais e responsáveis em reunião.
-- **Exceções deliberadas pela CGPC:**
-    - **Quartas-feiras:** É permitido o "Dia do Uniforme Diferente", quando os estudantes podem usar camisetas de turmas, projetos ou jogos, desde que tenham a logomarca do IFPR e a arte tenha sido aprovada pela Coordenação do Curso.
-    - **Formandos:** Alunos do último ano podem criar um uniforme exclusivo de sua turma, mediante aprovação prévia da Coordenação.
-- **Procedimento se você estiver sem uniforme:** Você **não é impedido de assistir à aula**, mas deve primeiro se apresentar na SEPAE para justificar a ausência. Após três ocorrências, seus pais ou responsáveis serão comunicados.
-
-**TEMA: Alimentação no Campus**
-- Os locais corretos para fazer lanches e refeições são o refeitório e os pátios.
-- Conforme deliberação da CGPC, é **proibido comer dentro das salas de aula, laboratórios e auditório**.
-- **Por quê?** Para mantermos esses espaços limpos, organizados, evitar a presença de insetos e prevenir acidentes com os equipamentos, principalmente nos laboratórios. Salas onde houver desrespeito a essa regra poderão ser trancadas durante os intervalos como medida disciplinar.
-
-**TEMA: Conflitos e Brigas**
-- Agressão física, verbal, ameaças, intimidação ou qualquer forma de desrespeito são **tolerância zero** no IFPR.
-- Se você tiver um problema com um colega, **não tente resolver com violência**. A primeira atitude é procurar um Inspetor, um professor ou a SEPAE. Eles são os canais corretos para mediar a conversa e ajudar a encontrar uma solução pacífica e formal.
-- **Fluxo Oficial:** O docente registra um "apontamento" no Sistema de Gestão Educacional (SGE), que notifica imediatamente a SEPAE e a Coordenação do Curso para as devidas providências.
-
-**TEMA: Bullying e Cyberbullying**
-- Bullying é qualquer ato de violência física ou psicológica, intencional e repetitivo, que ocorre sem motivação evidente. Isso inclui apelidos ofensivos, exclusão proposital, difamação e agressões.
-- Essa é uma falta gravíssima. Se você está sofrendo bullying ou vê um colega sofrendo, **não se cale**. Procure a SEPAE. A equipe te dará todo o apoio necessário e tomará as providências formais. O sigilo será mantido.
-
-**TEMA: Cuidado com o Patrimônio (Vandalismo)**
-- O campus é nosso! Carteiras, paredes, banheiros, computadores, portas, extintores e bebedouros são patrimônio público.
-- Riscar, pichar, quebrar ou usar indevidamente qualquer bem da instituição é uma falta grave. Incidentes como estes são registrados e comunicados aos responsáveis.
-- Além da medida disciplinar, o estudante que causar um dano será responsabilizado por repará-lo ou ressarcir o prejuízo. Vamos cuidar do que é nosso!
-
-**TEMA: Faltas e Atestados Médicos**
-- Se você precisar faltar por motivo de saúde, peça um atestado médico detalhado (com CID, se possível).
-- Você tem um prazo de **72 horas** a partir do início do afastamento para protocolar o atestado na Secretaria Acadêmica (pode ser online).
-- O atestado justifica a sua ausência, mas não abona as faltas. Ele te dá o direito de solicitar atividades de reposição ou uma segunda chamada para as avaliações que perdeu. Converse sempre com seus professores.
-
-**TEMA: Saída Antecipada do Campus**
-- A sua segurança é nossa prioridade. A saída antes do horário regulamentar (11:45 para o matutino) só pode ocorrer mediante procedimento formal.
-- **Menor de idade:** A saída só é permitida com autorização expressa e registrada dos pais ou responsáveis junto à SEPAE.
-- **Liberação pelo professor:** Nenhum professor está autorizado a liberar a turma antes do horário sem uma justificativa pedagógica muito forte. A liberação indevida é considerada irregular e já foi pauta de discussão na CGPC.
-
-**TEMA: Pertences Pessoais**
-- Cuide bem do que é seu! Mochila, celular, notebook e outros objetos de valor são de sua responsabilidade. Já tivemos casos de furto de bicicletas no campus.
-- Evite deixar seus pertences desacompanhados. Use os armários se disponíveis ou mantenha seus itens sempre com você.
-- O IFPR não se responsabiliza por objetos pessoais perdidos, furtados ou danificados.
-
-**TEMA: Papel da Inspeção e da SEPAE**
-- **Inspetores:** São seus aliados para a segurança e a boa convivência no dia a dia. Eles orientam, ajudam com informações, fiscalizam o cumprimento das normas (como o uso de uniforme) e são os primeiros a agir em caso de conflitos ou emergências.
-- **SEPAE (Seção Pedagógica e de Assuntos Estudantis):** É o seu porto seguro para questões de aprendizagem, dificuldades pessoais, problemas de relacionamento, justificativas de ausência (uniforme, etc.), e mediação de conflitos. É o principal canal de apoio ao estudante.
-- Lembre-se: todos esses profissionais estão aqui para te apoiar. A base da nossa relação é o diálogo e o respeito mútuo.
-`;
-// ---- FIM DA ENGENHARIA DE PROMPT ----
-
 // Rota principal: POST /api/chat
 router.post('/', async (req, res) => {
   try {
@@ -126,82 +61,112 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'userId e message são obrigatórios.' });
     }
 
-    // --- ETAPA 1: BUSCA DE CONHECIMENTO RELEVANTE (RAG) ---
+    // --- ETAPA 1: BUSCAR HISTÓRICO E VERIFICAR SE É A PRIMEIRA MENSAGEM ---
+    let conversation = await Conversation.findOne({ userId });
+    const isFirstMessage = !conversation || conversation.messages.length === 0;
+
+
+    // --- ETAPA 2: BUSCAR CONTEXTO RELEVANTE PARA A MENSAGEM ATUAL (RAG) ---
     console.log('Gerando embedding para a pergunta do usuário...');
     const queryEmbeddingResult = await embeddingModel.embedContent(message);
     const queryVector = queryEmbeddingResult.embedding.values;
-    
+
     // NOVO LOG: Verifique o vetor da consulta
     console.log('Vetor da consulta gerado. Tamanho:', queryVector.length);
     console.log('Primeiros 5 valores do vetor:', queryVector.slice(0, 5));
 
+
     console.log('Realizando busca vetorial no MongoDB...');
     let searchResults = [];
     try {
-        searchResults = await Knowledge.aggregate([
-            {
-                $vectorSearch: {
-                    index: "default",
-                    path: "embedding",
-                    queryVector: queryVector,
-                    numCandidates: 100,
-                    limit: 4
-                }
-            }
-        ]);
+      searchResults = await Knowledge.aggregate([
+        {
+          $vectorSearch: {
+            index: "default",
+            path: "embedding",
+            queryVector: queryVector,
+            numCandidates: 100,
+            limit: 4
+          }
+        }
+      ]);
     } catch (e) {
-        console.error("Erro na busca vetorial:", e.message);
-        // Se a busca vetorial falhar (ex: índice offline), searchResults continuará como []
+      console.error("Erro na busca vetorial:", e.message);
+      // Se a busca vetorial falhar (ex: índice offline), searchResults continuará como []
     }
+
+
 
     // --- NOVA LÓGICA DE FALLBACK AQUI ---
-    let context;
-    if (searchResults && searchResults.length > 0) {
-        // Plano A (Ideal): Usa os resultados da busca vetorial
-        console.log('Busca vetorial bem-sucedida. Usando contexto dinâmico.');
-        context = searchResults.map(doc => `- ${doc.content}`).join('\n');
-    } else {
-        // Plano B (Fallback): A busca não retornou nada. Usa a base de conhecimento completa.
-        console.warn('Busca vetorial não encontrou resultados. Usando a base de conhecimento estática como fallback.');
-        context = knowledgeBase; // Usa a constante gigante como contexto
-    }
-    
-    console.log('Contexto final a ser usado:', context.substring(0, 200) + '...'); // Log para ver o que está sendo usado
-    
+    const contextForThisTurn = searchResults.map(doc => `- ${doc.content}`).join('\n');
+    console.log(`Contexto RAG encontrado: ${contextForThisTurn ? 'Sim' : 'Não'}`);
 
-    // --- ETAPA 2: GERAÇÃO DA RESPOSTA COM CONTEXTO ---
-    let conversation = await Conversation.findOne({ userId });
-    if (!conversation) {
+// --- ETAPA 2: INICIAR OU CONTINUAR A SESSÃO DE CHAT ---
+    let chat;
+    const history = conversation ? conversation.messages.map(msg => ({
+      role: msg.role, parts: [{ text: msg.text }],
+    })) : [];
+
+    if (isFirstMessage) {
+      console.log("Iniciando nova conversa com instrução de sistema.");
+      let initialContext = contextForThisTurn;
+
+      // LÓGICA DE FALLBACK - ACONTECE APENAS NA PRIMEIRA MENSAGEM
+      if (!initialContext) {
+        console.warn('RAG não encontrou contexto inicial. Carregando base de conhecimento completa como fallback.');
+        const allKnowledge = await Knowledge.find({}).select('content');
+        initialContext = allKnowledge.map(doc => `- ${doc.content}`).join('\n');
+      }
+
+      const toneInstruction = getToneInstructions(piabot_temperature);
+      const initialSystemInstruction = {
+        role: "system",
+        parts: [{ text: `${systemPrompt}\n${toneInstruction}\n---CONTEXTO BASE---\n${initialContext}` }]
+      };
+
+      chat = generativeModel.startChat({
+        systemInstruction: initialSystemInstruction,
+        history: []
+      });
+    } else {
+      console.log("Continuando conversa existente.");
+      chat = generativeModel.startChat({ history });
+    }
+
+     // --- ETAPA 3: ENVIAR O PROMPT OTIMIZADO ---
+    // Mesmo que o contexto tenha sido enviado na instrução do sistema,
+    // enviá-lo novamente no prompt do turno atual reforça sua importância para a pergunta específica.
+    const promptForThisTurn = `
+      Com base no contexto abaixo (se houver), responda à pergunta do usuário.
+      ---
+      CONTEXTO PARA ESTA PERGUNTA:
+      ${contextForThisTurn || "Nenhum contexto específico encontrado para esta pergunta."}
+      ---
+      PERGUNTA: "${message}"
+    `;
+    
+    const result = await chat.sendMessage(promptForThisTurn);
+    const response = await result.response;
+    const botMessage = response.text();
+
+  if (!conversation) {
       conversation = new Conversation({ userId, messages: [] });
     }
 
-    // Prepara o histórico da conversa para a IA
-    const history = conversation.messages.map(msg => ({
-      role: msg.role,
-      parts: [{ text: msg.text }],
-    }));
+    // // Monta o prompt completo que será enviado para a IA
+    // const fullPrompt = `
+    //   ${systemPrompt}
 
-    // const generationConfig = {
-    //   maxOutputTokens: 500,
-    // };
+    //   ${toneInstruction} 
 
-    const chat = generativeModel.startChat({ history });
-    const toneInstruction = getToneInstructions(piabot_temperature);
-
-    // Monta o prompt completo que será enviado para a IA
-    const fullPrompt = `
-      ${systemPrompt}
-
-      ${toneInstruction} 
-
-      ---
-      USE O SEGUINTE CONTEXTO RELEVANTE PARA FORMULAR SUA RESPOSTA:
-      ${context}
-      ---
-      Com base ESTRITAMENTE no contexto acima, responda à pergunta do usuário. Se a resposta não estiver no contexto, diga que você não tem informações sobre esse tópico específico.
-      PERGUNTA DO USUÁRIO: "${message}"
+    //   ---
+    //   USE O SEGUINTE CONTEXTO RELEVANTE PARA FORMULAR SUA RESPOSTA:
+    //   ${context}
+    //   ---
+    //   Com base ESTRITAMENTE no contexto acima, responda à pergunta do usuário. Se a resposta não estiver no contexto, diga que você não tem informações sobre esse tópico específico.
+    //   PERGUNTA DO USUÁRIO: "${message}"
       
-    `;
+    // `;
 
 
     // ---
@@ -211,23 +176,6 @@ router.post('/', async (req, res) => {
 
     // PERGUNTA DO USUÁRIO: "${message}"
 
-
-
-    // const chat = model.startChat({
-    //   systemInstruction: {
-    //     role: "system",
-    //     parts: [{ text: `${systemPrompt}\n\nBASE DE CONHECIMENTO:\n${knowledgeBase}` }]
-    //   },
-    //   history: history,
-    //   generationConfig: {
-    //     maxOutputTokens: 500,
-    //   },
-    // });
-
-
-    const result = await chat.sendMessage(fullPrompt);
-    const response = await result.response;
-    const botMessage = response.text();
 
 
     // Salva a pergunta do usuário e a resposta do bot no nosso banco de dados
