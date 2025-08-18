@@ -46,7 +46,7 @@ export class ChatComponent implements OnInit {
     // Mensagem inicial de boas-vindas
     this.messages.push({
       role: 'model',
-      text: 'Daí! Eu sou o ELO, mas pode me chamar de Piá-bot. Sou seu canal de apoio aqui no IFPR. Manda a braba aí, no que posso te ajudar?'
+      text: 'Daí! Eu sou o ELO, mas pode me chamar de Piá-bot. Sou seu canal de apoio aqui no IFPR. No que posso te ajudar?'
     });
   }
 
