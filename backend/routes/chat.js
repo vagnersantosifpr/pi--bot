@@ -148,6 +148,7 @@ router.post('/', async (req, res) => {
 
     // Formata os resultados da busca para usar como contexto
     const context = searchResults.map(doc => `- ${doc.content}`).join('\n');
+
     console.log('Contexto encontrado:', context);
 
 
@@ -225,5 +226,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Ocorreu um erro ao processar sua mensagem.' });
   }
 });
+
 
 module.exports = router;
