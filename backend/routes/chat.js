@@ -11,24 +11,24 @@ const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 const generativeModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Usando o modelo mais recente e rápido
 
 // --- NOVA FUNÇÃO DE LÓGICA DE TOM ---
-function getToneInstructions(temperature) {
-  // Se a temperatura não for fornecida, usamos um padrão neutro (0.5)
-  const temp = temperature === undefined ? 0.5 : temperature;
+function getToneInstructions(piabot_temperature) {
+  // Se a temperatura não for fornecida, usamos um padrão neutro (1.0)
+  const temp_piabot_temperature = piabot_temperature === undefined ? 1.0 : piabot_temperature;
 
-  if (temp <= 0.3) {
+  if (temp_piabot_temperature <= 0.3) {
     // Tom mais jovem e descontraído
     return `
       **Instrução de Tom (Descontraído):** Fale como um colega de corredor, de forma bem informal e amigável. Use gírias leves e apropriadas para o ambiente escolar (como "tranquilo", "daora", "se liga") e, se fizer sentido, use emojis como 👍, 😉, ou 😊. O objetivo é ser o mais próximo e acolhedor possível para os estudantes mais novos.
     `;
-  } else if (temp > 0.3 && temp < 0.7) {
+  } else if (temp_piabot_temperature > 0.3 && temp_piabot_temperature < 0.7) {
     // Tom Padrão (Neutro e Amigável)
     return `
       **Instrução de Tom (Padrão):** Use o seu tom padrão, que é amigável, prestativo e educativo, conforme definido em suas regras fundamentais.
     `;
   } else {
-    // Tom mais formal e respeitoso
+    // Tom mais formal e Formal
     return `
-      **Instrução de Tom (Respeitoso):** Adote um tom mais formal e polido. Use expressões como "prezado(a) estudante", "por gentileza", "compreendo". Evite gírias e emojis. A comunicação deve ser clara, respeitosa e direta, como a de um servidor experiente orientando um membro valioso da comunidade acadêmica.
+      **Instrução de Tom (Formal):** Adote um tom mais formal e polido. Use expressões como "prezado(a) estudante", "por gentileza", "compreendo". Evite gírias e emojis. A comunicação deve ser clara, respeitosa e direta, como a de um servidor experiente orientando um membro valioso da comunidade acadêmica.
     `;
   }
 }
@@ -121,7 +121,7 @@ const knowledgeBase = `
 // Rota principal: POST /api/chat
 router.post('/', async (req, res) => {
   try {
-    const { userId, message, temperature } = req.body;
+    const { userId, message, piabot_temperature } = req.body;
     if (!userId || !message) {
       return res.status(400).json({ error: 'userId e message são obrigatórios.' });
     }
@@ -186,7 +186,7 @@ router.post('/', async (req, res) => {
     // };
 
     const chat = generativeModel.startChat({ history });
-    const toneInstruction = getToneInstructions(temperature);
+    const toneInstruction = getToneInstructions(piabot_temperature);
 
     // Monta o prompt completo que será enviado para a IA
     const fullPrompt = `
