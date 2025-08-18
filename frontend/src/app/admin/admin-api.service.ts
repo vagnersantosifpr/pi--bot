@@ -23,7 +23,7 @@ export interface KnowledgeItem {
     providedIn: 'root'
 })
 export class AdminApiService {
-//    private apiUrl = 'http://localhost:3000/api/admin'; // Ou URL de produção
+    //    private apiUrl = 'http://localhost:3000/api/admin'; // Ou URL de produção
     private readonly apiUrl = 'https://pia-bot.onrender.com/api/admin';
 
     constructor(private http: HttpClient) { }
@@ -44,6 +44,10 @@ export class AdminApiService {
 
     deleteKnowledgeItem(id: string): Observable<any> {
         return this.http.delete(`${this.apiUrl}/knowledge/${id}`);
+    }
+    // --- ADICIONE O MÉTODO FALTANTE AQUI ---
+    createKnowledgeItem(item: { source: string; topic: string; content: string }): Observable<KnowledgeItem> {
+        return this.http.post<KnowledgeItem>(`${this.apiUrl}/knowledge`, item);
     }
 
     // --- Métodos de Usuário (a serem implementados depois) ---

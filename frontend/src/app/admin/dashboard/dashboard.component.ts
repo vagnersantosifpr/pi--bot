@@ -2,16 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminApiService, ConversationSnippet, KnowledgeItem } from '../admin-api.service';
 import { AuthService } from '../auth.service';
+import { FormsModule } from '@angular/forms'; // 1. Importe o FormsModule
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
   activeTab: 'history' | 'knowledge' | 'users' = 'history';
+
   userName: string = '';
 
   conversations: ConversationSnippet[] = [];
@@ -19,12 +21,17 @@ export class DashboardComponent implements OnInit {
   isLoading: boolean = true; // Adiciona uma flag de carregamento
   error: string | null = null;   // Para exibir mensagens de erro
 
+  // 3. NOVAS PROPRIEDADES PARA O FORMULÁRIO
+  newKnowledgeItem = { topic: '', source: '', content: '' };
+  isSubmitting = false;
+  formError: string | null = null;
+
   selectedConversation: any = null;
 
   constructor(
     private adminApi: AdminApiService,
     private authService: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const user = JSON.parse(localStorage.getItem('authUser') || '{}');
@@ -33,9 +40,9 @@ export class DashboardComponent implements OnInit {
     this.loadConversations();
     // Carregue os outros dados também
     this.loadKnowledgeBase();
-    
+
   }
-  
+
   loadConversations(): void {
     this.isLoading = true;
     this.error = null;
@@ -54,10 +61,10 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
-  
-   loadKnowledgeBase(): void {
+
+  loadKnowledgeBase(): void {
     console.log("Buscando base de conhecimento..."); // Log de depuração
-    
+
     this.adminApi.getKnowledgeBase().subscribe({
       next: (data) => {
         this.knowledgeBase = data;
@@ -85,7 +92,7 @@ export class DashboardComponent implements OnInit {
       });
     }
   }
-  
+
   loadInitialData(): void {
     this.adminApi.getConversationSnippets().subscribe(data => this.conversations = data);
     this.adminApi.getKnowledgeBase().subscribe(data => this.knowledgeBase = data);
@@ -104,6 +111,27 @@ export class DashboardComponent implements OnInit {
       this.selectedConversation = data;
     });
   }
-  
-  
+
+
+  // 4. NOVO MÉTODO PARA O SUBMIT DO FORMULÁRIO
+  onAddKnowledgeSubmit(): void {
+    this.isSubmitting = true;
+    this.formError = null;
+
+    this.adminApi.createKnowledgeItem(this.newKnowledgeItem).subscribe({
+      next: (newItem: KnowledgeItem) => {
+        // Adiciona o novo item no topo da lista, sem precisar recarregar a página
+        this.knowledgeBase.unshift(newItem);
+        // Limpa o formulário
+        this.newKnowledgeItem = { topic: '', source: '', content: '' };
+        this.isSubmitting = false;
+      },
+      error: (err: any) => {
+        this.formError = 'Ocorreu um erro ao adicionar o item. Tente novamente.';
+        this.isSubmitting = false;
+        console.error('Erro ao criar item de conhecimento:', err);
+      }
+    });
+  }
+
 }

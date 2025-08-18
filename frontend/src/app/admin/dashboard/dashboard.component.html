@@ -56,9 +56,39 @@
                 </table>
             </div>
 
+
             <!-- CONTEÚDO DA ABA DE BASE DE CONHECIMENTO -->
             <div *ngIf="activeTab === 'knowledge'">
                 <h2>Itens da Base de Conhecimento</h2>
+
+                <!-- NOVO FORMULÁRIO DE ADIÇÃO -->
+                <div class="add-knowledge-form">
+                    <h3>Adicionar Novo Item</h3>
+                    <form (ngSubmit)="onAddKnowledgeSubmit()">
+                        <div class="form-group">
+                            <label for="new-topic">Tópico</label>
+                            <input type="text" id="new-topic" [(ngModel)]="newKnowledgeItem.topic" name="newTopic"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-source">Fonte (Ex: Resolução 01/2012, Art. 5º)</label>
+                            <input type="text" id="new-source" [(ngModel)]="newKnowledgeItem.source" name="newSource"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-content">Conteúdo</label>
+                            <textarea id="new-content" [(ngModel)]="newKnowledgeItem.content" name="newContent" rows="4"
+                                required></textarea>
+                        </div>
+                        <button type="submit" [disabled]="isSubmitting">
+                            {{ isSubmitting ? 'Adicionando...' : 'Adicionar Item' }}
+                        </button>
+                        <p *ngIf="formError" class="error-message">{{ formError }}</p>
+                    </form>
+                </div>
+
+                <hr class="divider">
+
                 <table>
                     <thead>
                         <tr>
