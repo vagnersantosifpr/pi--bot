@@ -130,11 +130,23 @@ router.post('/', async (req, res) => {
 
       chat = generativeModel.startChat({
         systemInstruction: initialSystemInstruction,
-        history: []
+        history: [],
+        // Aplica a temperatura dinâmica para esta sessão de chat
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 800, // Mantenha ou ajuste conforme sua necessidade para a sessão
+        }
       });
     } else {
       console.log("Continuando conversa existente.");
-      chat = generativeModel.startChat({ history });
+      chat = generativeModel.startChat({ 
+        history,
+        // Aplica a temperatura dinâmica para esta sessão de chat
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 800, // Mantenha ou ajuste conforme sua necessidade para a sessão
+        }
+       });
     }
 
      // --- ETAPA 3: ENVIAR O PROMPT OTIMIZADO ---
