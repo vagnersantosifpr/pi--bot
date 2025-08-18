@@ -1,0 +1,85 @@
+// client/src/app/admin/login/login.component.scss
+
+// Estiliza o contêiner principal para centralizar o formulário na tela
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; // Centraliza verticalmente
+  align-items: center;    // Centraliza horizontalmente
+  height: 100vh;          // Ocupa toda a altura da tela
+  background-color: #f0f2f5; // Fundo neutro
+}
+
+// Estiliza o formulário em si, dando a ele uma aparência de "card"
+form {
+  background: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; // Largura máxima para o formulário
+  display: flex;
+  flex-direction: column;
+  gap: 20px; // Espaçamento entre os elementos do formulário
+}
+
+// Estiliza o título principal da página de login
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+// Estiliza os grupos de label + input
+.form-group {
+  display: flex;
+  flex-direction: column;
+  
+  label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+  }
+
+  input {
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease-in-out;
+
+    // Efeito de destaque quando o campo está em foco
+    &:focus {
+      outline: none;
+      border-color: #008069; // Um verde institucional que usamos no chat
+    }
+  }
+}
+
+// Estiliza o botão de submissão
+button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #008069; // Verde institucional
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+
+  // Efeito de escurecimento ao passar o mouse
+  &:hover {
+    background-color: #006654;
+  }
+}
+
+// Estiliza a mensagem de erro quando ela aparece
+.error-message {
+  color: #d32f2f; // Um tom de vermelho para erros
+  text-align: center;
+  font-weight: 500;
+  margin-top: 10px;
+}

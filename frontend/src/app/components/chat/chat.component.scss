@@ -108,3 +108,29 @@
     font-weight: 500;
   }
 }
+
+.admin-icon {
+  position: absolute; // Posiciona o ícone em relação ao .header
+  left: 16px; // Distância da borda esquerda
+  top: 50%;
+  transform: translateY(-50%); // Centraliza verticalmente de forma precisa
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  color: rgba(255, 255, 255, 0.7); // Cor branca com um pouco de transparência
+
+  &:hover {
+    color: white; // Fica totalmente branco ao passar o mouse
+    transform: translateY(-50%) scale(1.1); // Efeito de leve crescimento
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Garante que o título não sobreponha o ícone
+.header-title {
+    text-align: center;
+}

@@ -1,5 +1,5 @@
 // src/app/components/chat/chat.component.ts
-import { Component, OnInit, ViewChild,   ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // <-- 1. IMPORTE O FORMSMODULE
 
@@ -9,6 +9,7 @@ import { MessageInputComponent } from '../message-input/message-input.component'
 import { ChatApiService } from '../../services/chat-api.service';
 import { Message } from '../../message.model';
 import { v4 as uuidv4 } from 'uuid'; // Precisaremos de uma lib de UUID
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -30,7 +31,7 @@ export class ChatComponent implements OnInit {
 
   @ViewChild('messagesArea') private messagesArea!: ElementRef;
 
-  constructor(private chatApi: ChatApiService) { }
+  constructor(private chatApi: ChatApiService, private router: Router) { }
 
   ngOnInit(): void {
     // Gera ou recupera um userId único para o usuário
@@ -45,7 +46,7 @@ export class ChatComponent implements OnInit {
     // Mensagem inicial de boas-vindas
     this.messages.push({
       role: 'model',
-      text: 'Daí! Eu sou o E.L.O., mas pode me chamar de Piá-bot. Sou seu canal de apoio aqui no IFPR. Manda a braba aí, no que posso te ajudar?'
+      text: 'Daí! Eu sou o ELO, mas pode me chamar de Piá-bot. Sou seu canal de apoio aqui no IFPR. Manda a braba aí, no que posso te ajudar?'
     });
   }
 
@@ -54,7 +55,7 @@ export class ChatComponent implements OnInit {
     localStorage.setItem('assisbot_temperature', this.chatTemperature.toString());
   }
 
-  
+
 
   ngAfterViewChecked(): void {
     // Este método é chamado após cada verificação de mudança de view.
@@ -86,6 +87,11 @@ export class ChatComponent implements OnInit {
         console.error(err);
       }
     });
+  }
+
+  // 3. ADICIONE O NOVO MÉTODO
+  navigateToAdmin(): void {
+    this.router.navigate(['/admin']);
   }
 
   private scrollToBottom(): void {

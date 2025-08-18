@@ -1,0 +1,25 @@
+// app.component.scss
+
+// Define estilos para o elemento host <app-root>.
+// Fazemos ele se comportar como um container flexível que ocupa 100% da altura da tela.
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; // 'vh' (viewport height) garante que ocupe 100% da altura da janela do navegador.
+
+  // Define o fundo da página.
+  // Você pode substituir por uma imagem com 'background-image: url(...)', se preferir.
+  background-color: #f0f2f5; // Um cinza claro e neutro, comum em aplicações web.
+}
+
+/*
+  Estilos Globais Básicos (Opcional, mas recomendado)
+  É uma boa prática colocar isso no arquivo global `styles.scss`,
+  mas também funciona bem aqui para garantir que o componente raiz se comporte como esperado.
+*/
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}

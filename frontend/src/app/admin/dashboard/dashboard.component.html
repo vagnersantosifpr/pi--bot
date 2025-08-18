@@ -1,0 +1,112 @@
+<div class="admin-dashboard">
+    <header class="dashboard-header">
+        <h1>Painel Administrativo - Piá-bot</h1>
+        <div class="user-info">
+            <span>Olá, {{ userName }}!</span>
+            <button (click)="logout()">Sair</button>
+        </div>
+    </header>
+
+    <main class="dashboard-content">
+        <nav class="tabs">
+            <button (click)="setActiveTab('history')" [class.active]="activeTab === 'history'">Histórico de
+                Conversas</button>
+            <button (click)="setActiveTab('knowledge')" [class.active]="activeTab === 'knowledge'">Base de
+                Conhecimento</button>
+            <button (click)="setActiveTab('users')" [class.active]="activeTab === 'users'">Gerenciar Usuários</button>
+        </nav>
+
+        <div class="tab-content">
+            <!-- CONTEÚDO DA ABA DE HISTÓRICO -->
+            <div *ngIf="activeTab === 'history'">
+                <h2>Últimas Conversas</h2>
+
+                <!-- MENSAGEM DE CARREGAMENTO -->
+                <div *ngIf="isLoading" class="loading-indicator">Carregando histórico...</div>
+
+                <!-- MENSAGEM DE ERRO -->
+                <div *ngIf="error" class="error-indicator">{{ error }}</div>
+
+
+                <table *ngIf="!isLoading && !error">
+                    <thead>
+                        <tr>
+                            <th>ID do Usuário</th>
+                            <th>Data</th>
+                            <th>Primeira Mensagem</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- MENSAGEM PARA QUANDO NÃO HÁ CONVERSAS -->
+                        <tr *ngIf="conversations.length === 0">
+                            <td colspan="4" class="no-data">Nenhuma conversa encontrada.</td>
+                        </tr>
+                        <!-- LOOP PARA EXIBIR AS CONVERSAS -->
+                        <tr *ngFor="let convo of conversations">
+                            <td>
+                                <span class="user-id" title="{{ convo.userId }}">{{ convo.userId | slice:0:15
+                                    }}...</span>
+                            </td>
+                            <td>{{ convo.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                            <td>"{{ convo.messages[0]?.text | slice:0:50 }}..."</td>
+                            <td><button (click)="viewConversation(convo._id)">Visualizar</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CONTEÚDO DA ABA DE BASE DE CONHECIMENTO -->
+            <div *ngIf="activeTab === 'knowledge'">
+                <h2>Itens da Base de Conhecimento</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tópico</th>
+                            <th>Conteúdo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- MENSAGEM PARA QUANDO A BASE ESTÁ VAZIA -->
+                        <tr *ngIf="knowledgeBase.length === 0">
+                            <td colspan="4" class="no-data">Nenhum item na base de conhecimento. Execute o script de
+                                seed no servidor.</td>
+                        </tr>
+                        <!-- LOOP PARA EXIBIR OS ITENS -->
+                        <tr *ngFor="let item of knowledgeBase">
+                            <td><strong>{{ item.topic }}</strong></td>
+                            <td>{{ item.content | slice:0:100 }}...</td>
+                            <td><span class="source-tag">{{ item.source }}</span></td>
+                            <td><button class="danger" (click)="deleteKnowledgeItem(item._id)">Excluir</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="note">Para adicionar ou atualizar itens, modifique o arquivo
+                    <code>knowledge_base_data.json</code> e execute o script <code>seedKnowledgeBase.js</code> no
+                    servidor.
+                </p>
+            </div>
+
+            <!-- CONTEÚDO DA ABA DE USUÁRIOS (placeholder) -->
+            <div *ngIf="activeTab === 'users'">
+                <h2>Gerenciamento de Usuários</h2>
+                <p>Funcionalidade a ser implementada.</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- MODAL PARA VISUALIZAR CONVERSA COMPLETA -->
+<div class="modal-overlay" *ngIf="selectedConversation">
+    <div class="modal-content">
+        <button class="close-btn" (click)="selectedConversation = null">&times;</button>
+        <h3>Conversa com {{ selectedConversation.userId }}</h3>
+        <div class="message-list">
+            <div *ngFor="let msg of selectedConversation.messages" [ngClass]="msg.role">
+                <strong>{{ msg.role === 'user' ? 'Usuário' : 'Piá-bot' }}:</strong>
+                <p>{{ msg.text }}</p>
+            </div>
+        </div>
+    </div>
+</div>

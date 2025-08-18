@@ -16,6 +16,12 @@ app.use(express.json());
 // Define um prefixo para todas as rotas de chat
 app.use('/api/chat', require('./routes/chat'));
 // ---------------------------------
+// Rota de Autenticação (pública)
+app.use('/api/auth', require('./routes/auth'));
+
+// Rotas de Admin (protegidas)
+app.use('/api/admin', require('./routes/admin'));
+
 
 app.get('/', (req, res) => {
   res.send('Servidor AssisBot está online e pronto para conversar!');
