@@ -11,7 +11,7 @@ export const ADMIN_ROUTES: Routes = [
   { 
     path: 'dashboard', 
     component: DashboardComponent,
-    // canActivate: [authGuard] // Protege a rota do dashboard
+    canActivate: [authGuard] // Protege a rota do dashboard
   },
   { 
     path: '', 
