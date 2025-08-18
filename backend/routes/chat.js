@@ -122,8 +122,6 @@ const knowledgeBase = `
 router.post('/', async (req, res) => {
   try {
     const { userId, message, temperature } = req.body;
-
-    // Validação da entrada
     if (!userId || !message) {
       return res.status(400).json({ error: 'userId e message são obrigatórios.' });
     }
@@ -132,25 +130,29 @@ router.post('/', async (req, res) => {
     console.log('Gerando embedding para a pergunta do usuário...');
     const queryEmbeddingResult = await embeddingModel.embedContent(message);
     const queryVector = queryEmbeddingResult.embedding.values;
+    
+    // NOVO LOG: Verifique o vetor da consulta
+    console.log('Vetor da consulta gerado. Tamanho:', queryVector.length);
+    console.log('Primeiros 5 valores do vetor:', queryVector.slice(0, 5));
 
     console.log('Realizando busca vetorial no MongoDB...');
     const searchResults = await Knowledge.aggregate([
       {
         $vectorSearch: {
-          index: "default", // O nome do índice que você criou no Atlas
+          index: "default",
           path: "embedding",
           queryVector: queryVector,
-          numCandidates: 100, // Número de candidatos a serem considerados na busca
-          limit: 4 // Número de resultados mais relevantes a retornar
+          numCandidates: 100,
+          limit: 4
         }
       }
     ]);
+    
+    // NOVO LOG: Verifique os resultados brutos da busca
+    console.log('Resultados brutos da busca:', searchResults);
 
-    // Formata os resultados da busca para usar como contexto
     const context = searchResults.map(doc => `- ${doc.content}`).join('\n');
-
-    console.log('Contexto encontrado:', context);
-
+    console.log('Contexto encontrado:', context); // Este é o seu log original
 
     // --- ETAPA 2: GERAÇÃO DA RESPOSTA COM CONTEXTO ---
     let conversation = await Conversation.findOne({ userId });
@@ -229,3 +231,4 @@ router.post('/', async (req, res) => {
 
 
 module.exports = router;
+
