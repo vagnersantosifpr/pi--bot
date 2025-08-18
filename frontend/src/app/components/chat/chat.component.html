@@ -21,7 +21,7 @@
     <span class="temp-label">Descontraído</span>
     <input type="range" id="temperature" min="0" max="1" step="0.1" [(ngModel)]="chatTemperature"
       (ngModelChange)="onTemperatureChange()">
-    <span class="temp-label">Respeitoso</span>
+    <span class="temp-label">Formal</span>
   </div>
 
   <!-- ENVOLVA O COMPONENTE AQUI -->
@@ -32,4 +32,5 @@
   <div class="input-area">
     <app-message-input (sendMessage)="handleSendMessage($event)"></app-message-input>
   </div>
+
 </div>
