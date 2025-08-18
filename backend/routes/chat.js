@@ -136,23 +136,38 @@ router.post('/', async (req, res) => {
     console.log('Primeiros 5 valores do vetor:', queryVector.slice(0, 5));
 
     console.log('Realizando busca vetorial no MongoDB...');
-    const searchResults = await Knowledge.aggregate([
-      {
-        $vectorSearch: {
-          index: "default",
-          path: "embedding",
-          queryVector: queryVector,
-          numCandidates: 100,
-          limit: 4
-        }
-      }
-    ]);
-    
-    // NOVO LOG: Verifique os resultados brutos da busca
-    console.log('Resultados brutos da busca:', searchResults);
+    let searchResults = [];
+    try {
+        searchResults = await Knowledge.aggregate([
+            {
+                $vectorSearch: {
+                    index: "default",
+                    path: "embedding",
+                    queryVector: queryVector,
+                    numCandidates: 100,
+                    limit: 4
+                }
+            }
+        ]);
+    } catch (e) {
+        console.error("Erro na busca vetorial:", e.message);
+        // Se a busca vetorial falhar (ex: índice offline), searchResults continuará como []
+    }
 
-    const context = searchResults.map(doc => `- ${doc.content}`).join('\n');
-    console.log('Contexto encontrado:', context); // Este é o seu log original
+    // --- NOVA LÓGICA DE FALLBACK AQUI ---
+    let context;
+    if (searchResults && searchResults.length > 0) {
+        // Plano A (Ideal): Usa os resultados da busca vetorial
+        console.log('Busca vetorial bem-sucedida. Usando contexto dinâmico.');
+        context = searchResults.map(doc => `- ${doc.content}`).join('\n');
+    } else {
+        // Plano B (Fallback): A busca não retornou nada. Usa a base de conhecimento completa.
+        console.warn('Busca vetorial não encontrou resultados. Usando a base de conhecimento estática como fallback.');
+        context = knowledgeBase; // Usa a constante gigante como contexto
+    }
+    
+    console.log('Contexto final a ser usado:', context.substring(0, 200) + '...'); // Log para ver o que está sendo usado
+    
 
     // --- ETAPA 2: GERAÇÃO DA RESPOSTA COM CONTEXTO ---
     let conversation = await Conversation.findOne({ userId });
@@ -231,4 +246,5 @@ router.post('/', async (req, res) => {
 
 
 module.exports = router;
+
 
