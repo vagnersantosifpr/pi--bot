@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Conversation = require('../models/Conversation');
 const Knowledge = require('../models/Knowledge');
 const User = require('../models/User');
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+
 
 // Novo Middleware de Autenticação baseado em Token JWT
 const authMiddleware = (req, res, next) => {
