@@ -83,13 +83,13 @@ router.post('/', async (req, res) => {
 
 
     // --- ETAPA 2: BUSCAR CONTEXTO RELEVANTE PARA A MENSAGEM ATUAL (RAG) ---
-    console.log('Gerando embedding para a pergunta do usuário...');
+    console.log('Gerando embedding para a PERGUNTA do usuário...');
     const queryEmbeddingResult = await embeddingModel.embedContent(message);
     const queryVector = queryEmbeddingResult.embedding.values;
 
     // NOVO LOG: Verifique o vetor da consulta
-    console.log('Vetor da consulta gerado. Tamanho:', queryVector.length);
-    console.log('Primeiros 5 valores do vetor:', queryVector.slice(0, 5));
+    console.log('Vetor da consulta gerado (PERGUNTA). Tamanho:', queryVector.length);
+    console.log('Primeiros 5 valores do vetor (PERGUNTA):', queryVector.slice(0, 5));
 
 
     console.log('Realizando busca vetorial no MongoDB...');
@@ -98,7 +98,7 @@ router.post('/', async (req, res) => {
       searchResults = await Knowledge.aggregate([
         {
           $vectorSearch: {
-            index: "default",
+            index: "vetor_index",
             path: "embedding",
             queryVector: queryVector,
             numCandidates: 100,
