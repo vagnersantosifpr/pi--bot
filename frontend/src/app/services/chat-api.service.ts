@@ -18,8 +18,24 @@ export class ChatApiService {
 
   constructor(private http: HttpClient) { }
 
-  sendMessage(userId: string, message: string, piabot_temperature: number): Observable<ChatResponse> {
+  sendMessage1(userId: string, message: string, piabot_temperature: number): Observable<ChatResponse> {
     const body = { userId, message, piabot_temperature };
     return this.http.post<ChatResponse>(this.apiUrl, body);
+  }
+
+  async sendMessage(userId: string, message: string, temperature: number): Promise<any> {
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, message, piabot_temperature: temperature })
+    });
+
+    if (!response.ok) {
+      throw new Error('Falha na requisição da API');
+    }
+
+    // A CORREÇÃO ESTÁ AQUI: espere o JSON ser parseado
+    const data = await response.json();
+    return data;
   }
 }

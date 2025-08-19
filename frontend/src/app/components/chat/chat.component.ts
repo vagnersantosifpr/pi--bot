@@ -65,28 +65,44 @@ export class ChatComponent implements OnInit {
     }
   }
 
-  handleSendMessage(text: string): void {
+  async handleSendMessage(text: string): Promise<void> {
+    // ...
+    try {
+      const response = await this.chatApi.sendMessage(this.userId, text, this.chatTemperature);
+      // 'response' já é o objeto { reply: "..." }
+      this.messages.pop(); // Remove o loading
+      this.messages.push({ role: 'model', text: response.reply });
+      this.shouldScrollDown = true;
+    } catch (error) {
+      // ...
+    }
+  }
+
+  handleSendMessage1(text: string): void {
     // Adiciona a mensagem do usuário à tela
     this.messages.push({ role: 'user', text });
 
     // Adiciona um indicador de "carregando"
     this.messages.push({ role: 'loading', text: '' });
 
+
     // Chama a API
-    this.chatApi.sendMessage(this.userId, text, this.chatTemperature).subscribe({
-      next: (response) => {
-        // Remove o indicador de "carregando"
-        this.messages.pop();
-        // Adiciona a resposta do bot
-        this.messages.push({ role: 'model', text: response.reply });
-      },
-      error: (err) => {
-        // Remove o indicador de "carregando" e mostra uma mensagem de erro
-        this.messages.pop();
-        this.messages.push({ role: 'model', text: 'Desculpe, ocorreu um erro. Tente novamente mais tarde.' });
-        console.error(err);
-      }
-    });
+    // this.chatApi.sendMessage(this.userId, text, this.chatTemperature).subscribe({
+    //   next: (response: { reply: any; }) => {
+    //     // Remove o indicador de "carregando"
+    //     this.messages.pop();
+    //     // Adiciona a resposta do bot
+    //     this.messages.push({ role: 'model', text: response.reply });
+    //     this.shouldScrollDown = true;
+
+    //   },
+    //   error: (err: any) => {
+    //     // Remove o indicador de "carregando" e mostra uma mensagem de erro
+    //     this.messages.pop();
+    //     this.messages.push({ role: 'model', text: 'Desculpe, ocorreu um erro. Tente novamente mais tarde.' });
+    //     console.error(err);
+    //   }
+    // });
   }
 
   // 3. ADICIONE O NOVO MÉTODO
