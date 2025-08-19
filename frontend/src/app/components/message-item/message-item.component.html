@@ -3,7 +3,7 @@
   
   <!-- Caso seja uma mensagem de texto (usuário ou bot) -->
   <p *ngSwitchCase="'user'">{{ message.text }}</p>
-  <p *ngSwitchCase="'model'">{{ message.text }}</p>
+  <p *ngSwitchCase="'model'">{{ message.text | markdown }}</p>
 
   <!-- Caso seja o indicador de 'loading' -->
   <div *ngSwitchCase="'loading'" class="loading-indicator">
