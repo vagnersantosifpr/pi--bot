@@ -106,6 +106,7 @@ router.post('/', async (req, res) => {
           }
         }
       ]);
+      console.log("Resultados de documentos relevantes: "+searchResults.length);
     } catch (e) {
       console.error("Erro na busca vetorial:", e.message);
       // Se a busca vetorial falhar (ex: índice offline), searchResults continuará como []
