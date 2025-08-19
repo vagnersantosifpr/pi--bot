@@ -143,7 +143,7 @@ router.post('/', async (req, res) => {
       //if (!contextForThisTurn) {
         console.warn('RAG não encontrou contexto inicial. Carregando base de conhecimento completa como fallback.');
         const allKnowledge = await Knowledge.find({}).select('content');
-        initialContext = allKnowledge.map(doc => `- ${doc.content}`).join('\n');
+        contextForThisTurn = allKnowledge.map(doc => `- ${doc.content}`).join('\n');
       //}
 
       const toneInstruction = getToneInstructions(piabot_temperature);
@@ -234,6 +234,7 @@ router.post('/', async (req, res) => {
 
 
 module.exports = router;
+
 
 
 
