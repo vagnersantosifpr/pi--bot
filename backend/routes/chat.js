@@ -125,7 +125,7 @@ router.post('/', async (req, res) => {
 
 
     // --- NOVA LÓGICA DE FALLBACK AQUI ---
-    const contextForThisTurn = searchResults.map(doc => `- ${doc.content}`).join('\n');
+    let contextForThisTurn = searchResults.map(doc => `- ${doc.content}`).join('\n');
     console.log(`Contexto RAG para este turno: ${contextForThisTurn ? 'Encontrado' : 'Vazio'}`);
 
 // --- ETAPA 2: INICIAR OU CONTINUAR A SESSÃO DE CHAT ---
@@ -206,6 +206,7 @@ router.post('/', async (req, res) => {
 
 
 module.exports = router;
+
 
 
 
