@@ -77,10 +77,21 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'userId e message são obrigatórios.' });
     }
 
-    // --- ETAPA 1: BUSCAR HISTÓRICO E VERIFICAR SE É A PRIMEIRA MENSAGEM ---
+    // --- ETAPA 1: BUSCAR HISTÓRICO E DEFINIR SE É UMA NOVA SESSÃO ---
     let conversation = await Conversation.findOne({ userId });
     const isFirstMessage = !conversation || conversation.messages.length === 0;
+    
+    let isNewSession = true; // Assume que é uma nova sessão por padrão
+    const SESSION_TIMEOUT_HOURS = 2; // Define que uma sessão "expira" após 8 horas
 
+    if (conversation && conversation.messages.length > 0) {
+      const lastMessage = conversation.messages[conversation.messages.length - 1];
+      const hoursSinceLastMessage = (new Date() - new Date(lastMessage.timestamp)) / 1000 / 60 / 60;
+      
+      if (hoursSinceLastMessage < SESSION_TIMEOUT_HOURS) {
+        isNewSession = false; // A última mensagem é recente, continua a mesma sessão.
+      }
+    }
 
     // --- ETAPA 2: BUSCAR CONTEXTO RELEVANTE PARA A MENSAGEM ATUAL (RAG) ---
     console.log('Gerando embedding para a PERGUNTA do usuário...');
@@ -124,21 +135,21 @@ router.post('/', async (req, res) => {
       role: msg.role, parts: [{ text: msg.text }],
     })) : [];
 
-    if (isFirstMessage) {
-      console.log("Iniciando nova conversa com instrução de sistema.");
+    if (isNewSession) {
+      console.log("Iniciando NOVA SESSÃO com systemInstruction atualizada.");
       let initialContext = contextForThisTurn;
 
       // LÓGICA DE FALLBACK - ACONTECE APENAS NA PRIMEIRA MENSAGEM
-      if (!initialContext) {
+      //if (!contextForThisTurn) {
         console.warn('RAG não encontrou contexto inicial. Carregando base de conhecimento completa como fallback.');
         const allKnowledge = await Knowledge.find({}).select('content');
         initialContext = allKnowledge.map(doc => `- ${doc.content}`).join('\n');
-      }
+      //}
 
       const toneInstruction = getToneInstructions(piabot_temperature);
       const initialSystemInstruction = {
         role: "system",
-        parts: [{ text: `${systemPrompt}\n${toneInstruction}\n---CONTEXTO BASE---\n${initialContext}` }]
+        parts: [{ text: `${systemPrompt}\n${toneInstruction}\n---CONTEXTO BASE---\n${contextForThisTurn}` }]
       };
 
       chat = generativeModel.startChat({
@@ -223,5 +234,6 @@ router.post('/', async (req, res) => {
 
 
 module.exports = router;
+
 
 
