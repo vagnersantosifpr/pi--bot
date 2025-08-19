@@ -78,8 +78,7 @@ router.post('/', async (req, res) => {
     }
 
     // --- ETAPA 1: BUSCAR HISTÓRICO E DEFINIR SE É UMA NOVA SESSÃO ---
-    let conversation = await Conversation.findOne({ userId });
-    const isFirstMessage = !conversation || conversation.messages.length === 0;
+    const conversation = await Conversation.findOne({ userId });
     
     let isNewSession = true; // Assume que é uma nova sessão por padrão
     const SESSION_TIMEOUT_HOURS = 2; // Define que uma sessão "expira" após 8 horas
@@ -109,7 +108,7 @@ router.post('/', async (req, res) => {
       searchResults = await Knowledge.aggregate([
         {
           $vectorSearch: {
-            index: "vetor_index",
+            index: "vector_index", // Garanta que o nome está correto
             path: "embedding",
             queryVector: queryVector,
             numCandidates: 100,
@@ -127,18 +126,26 @@ router.post('/', async (req, res) => {
 
     // --- NOVA LÓGICA DE FALLBACK AQUI ---
     const contextForThisTurn = searchResults.map(doc => `- ${doc.content}`).join('\n');
-    console.log(`Contexto RAG encontrado: ${contextForThisTurn ? 'Sim' : 'Não'}`);
+    console.log(`Contexto RAG para este turno: ${contextForThisTurn ? 'Encontrado' : 'Vazio'}`);
 
 // --- ETAPA 2: INICIAR OU CONTINUAR A SESSÃO DE CHAT ---
     let chat;
     const history = conversation ? conversation.messages.map(msg => ({
-      role: msg.role, parts: [{ text: msg.text }],
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }],
     })) : [];
 
     if (isNewSession) {
       console.log("Iniciando NOVA SESSÃO com systemInstruction atualizada.");
-      let initialContext = contextForThisTurn;
+      const toneInstruction = getToneInstructions(piabot_temperature);
 
+
+      // A instrução do sistema é montada apenas uma vez por sessão
+      const fullSystemInstruction = {
+        role: "system",
+        parts: [{ text: `${systemPrompt}\n${toneInstruction}` }]
+      };
+      
       // LÓGICA DE FALLBACK - ACONTECE APENAS NA PRIMEIRA MENSAGEM
       //if (!contextForThisTurn) {
         console.warn('RAG não encontrou contexto inicial. Carregando base de conhecimento completa como fallback.');
@@ -146,25 +153,20 @@ router.post('/', async (req, res) => {
         contextForThisTurn = allKnowledge.map(doc => `- ${doc.content}`).join('\n');
       //}
 
-      const toneInstruction = getToneInstructions(piabot_temperature);
-      const initialSystemInstruction = {
-        role: "system",
-        parts: [{ text: `${systemPrompt}\n${toneInstruction}\n---CONTEXTO BASE---\n${contextForThisTurn}` }]
-      };
-
+      
       chat = generativeModel.startChat({
-        systemInstruction: initialSystemInstruction,
-        history: [],
-        // Aplica a temperatura dinâmica para esta sessão de chat
+        systemInstruction: fullSystemInstruction,
+        history: history, // Passamos o histórico completo para a IA ter o contexto de conversas passadas
         generationConfig: {
           temperature: 0.2,
-          maxOutputTokens: 800, // Mantenha ou ajuste conforme sua necessidade para a sessão
+          maxOutputTokens: 800,
         }
       });
+      
     } else {
-      console.log("Continuando conversa existente.");
+      console.log("Continuando sessão existente.");
       chat = generativeModel.startChat({ 
-        history,
+        history: history, // A instrução de sistema já foi dada nesta sessão, basta o histórico
         // Aplica a temperatura dinâmica para esta sessão de chat
         generationConfig: {
           temperature: 0.2,
@@ -173,55 +175,25 @@ router.post('/', async (req, res) => {
        });
     }
 
-     // --- ETAPA 3: ENVIAR O PROMPT OTIMIZADO ---
-    // Mesmo que o contexto tenha sido enviado na instrução do sistema,
-    // enviá-lo novamente no prompt do turno atual reforça sua importância para a pergunta específica.
+    // --- ETAPA 4: ENVIAR O PROMPT OTIMIZADO ---
     const promptForThisTurn = `
-      Com base no contexto abaixo (se houver), responda à pergunta do usuário.
       ---
-      CONTEXTO PARA ESTA PERGUNTA:
-      ${contextForThisTurn || "Nenhum contexto específico encontrado para esta pergunta."}
+      CONTEXTO RELEVANTE PARA ESTA PERGUNTA:
+      ${contextForThisTurn || "Nenhum contexto específico relevante encontrado para esta pergunta."}
       ---
-      PERGUNTA: "${message}"
+      PERGUNTA DO USUÁRIO: "${message}"
     `;
     
     const result = await chat.sendMessage(promptForThisTurn);
     const response = await result.response;
     const botMessage = response.text();
 
-  if (!conversation) {
-      conversation = new Conversation({ userId, messages: [] });
-    }
-
-    // // Monta o prompt completo que será enviado para a IA
-    // const fullPrompt = `
-    //   ${systemPrompt}
-
-    //   ${toneInstruction} 
-
-    //   ---
-    //   USE O SEGUINTE CONTEXTO RELEVANTE PARA FORMULAR SUA RESPOSTA:
-    //   ${context}
-    //   ---
-    //   Com base ESTRITAMENTE no contexto acima, responda à pergunta do usuário. Se a resposta não estiver no contexto, diga que você não tem informações sobre esse tópico específico.
-    //   PERGUNTA DO USUÁRIO: "${message}"
-      
-    // `;
-
-
-    // ---
-    // BASE DE CONHECIMENTO (Use isso como sua fonte principal de verdade):
-    // ${knowledgeBase}
-    // ---
-
-    // PERGUNTA DO USUÁRIO: "${message}"
-
-
-
-    // Salva a pergunta do usuário e a resposta do bot no nosso banco de dados
-    conversation.messages.push({ role: 'user', text: message });
-    conversation.messages.push({ role: 'model', text: botMessage });
-    await conversation.save();
+     // --- ETAPA 5: SALVAR E RESPONDER ---
+    const updatedConversation = await Conversation.findOneAndUpdate(
+        { userId: userId },
+        { $push: { messages: [{ role: 'user', text: message }, { role: 'model', text: botMessage }] } },
+        { new: true, upsert: true }
+    );
 
     // Envia a resposta do bot de volta para o frontend
     res.json({ reply: botMessage });
@@ -234,6 +206,7 @@ router.post('/', async (req, res) => {
 
 
 module.exports = router;
+
 
 
 
