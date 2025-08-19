@@ -8,7 +8,7 @@ import { Observable, tap } from 'rxjs';
 })
 export class AuthService {
   private readonly apiUrl = 'https://pia-bot.onrender.com/api/auth';
-  
+
   //private apiUrl = 'http://localhost:3000/api/auth'; // Ou a URL do seu backend em produção
 
   constructor(private http: HttpClient, private router: Router) { }

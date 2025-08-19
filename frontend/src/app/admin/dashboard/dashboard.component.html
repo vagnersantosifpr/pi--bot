@@ -112,13 +112,102 @@
                         </tr>
                     </tbody>
                 </table>
-                
+
             </div>
 
             <!-- CONTEÚDO DA ABA DE USUÁRIOS (placeholder) -->
             <div *ngIf="activeTab === 'users'">
                 <h2>Gerenciamento de Usuários</h2>
-                <p>Funcionalidade a ser implementada.</p>
+
+                <!-- Seção: Alterar Minha Senha -->
+                <div class="user-management-section">
+                    <h3>Alterar Minha Senha</h3>
+                    <form (ngSubmit)="onPasswordChangeSubmit()">
+                        <div class="form-group">
+                            <label for="currentPassword">Senha Atual</label>
+                            <input type="password" id="currentPassword" [(ngModel)]="currentPassword"
+                                name="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Nova Senha</label>
+                            <input type="password" id="newPassword" [(ngModel)]="newPassword" name="newPassword"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Confirmar Nova Senha</label>
+                            <input type="password" id="confirmNewPassword" [(ngModel)]="confirmNewPassword"
+                                name="confirmNewPassword" required>
+                        </div>
+                        <button type="submit">Alterar Senha</button>
+                        <p *ngIf="passwordChangeMessage" class="success-message">{{ passwordChangeMessage }}</p>
+                        <p *ngIf="passwordChangeError" class="error-message">{{ passwordChangeError }}</p>
+                    </form>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Seção: Gerenciar Outros Usuários (APENAS PARA ADMINS) -->
+                <div *ngIf="userRole === 'admin'" class="user-management-section">
+                    <h3>Gerenciar Outros Usuários</h3>
+
+                    <h4>Adicionar Novo Usuário</h4>
+                    <form (ngSubmit)="onNewUserSubmit()">
+                        <div class="form-group">
+                            <label for="new-user-email">Email</label>
+                            <input type="email" id="new-user-email" [(ngModel)]="newUser.email" name="newUserEmail"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-user-password">Senha</label>
+                            <input type="password" id="new-user-password" [(ngModel)]="newUser.password"
+                                name="newUserPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-user-name">Nome</label>
+                            <input type="text" id="new-user-name" [(ngModel)]="newUser.name" name="newUserName"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-user-role">Função</label>
+                            <select id="new-user-role" [(ngModel)]="newUser.role" name="newUserRole" required>
+                                <option value="viewer">Visualizador</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <button type="submit">Adicionar Usuário</button>
+                        <p *ngIf="newUserMessage" class="success-message">{{ newUserMessage }}</p>
+                        <p *ngIf="newUserError" class="error-message">{{ newUserError }}</p>
+                    </form>
+
+                    <hr class="divider">
+
+                    <h4>Lista de Usuários</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Função</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let user of users">
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.role }}</td>
+                                <td>
+                                    <button class="danger" (click)="deleteUser(user._id)"
+                                        [disabled]="user.role === 'admin' && user.email === userName">Excluir</button>
+                                    <!-- O botão de excluir admin está desabilitado para o próprio usuário logado -->
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div *ngIf="userRole !== 'admin'" class="no-privileges">
+                    <p>Você não tem privilégios de administrador para gerenciar outros usuários.</p>
+                </div>
             </div>
         </div>
     </main>

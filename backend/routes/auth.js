@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
     expiresIn: '8h', // Token expira em 8 horas
   });
 
-  res.json({ token, user: { name: user.name, role: user.role } });
+  res.json({ token, user: { _id: user._id, name: user.name, role: user.role } });
 });
 
 module.exports = router;

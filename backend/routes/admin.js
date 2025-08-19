@@ -162,4 +162,48 @@ router.delete('/users/:id', adminOnly, async (req, res) => {
     }
 });
 
+// --- NOVA ROTA PARA ATUALIZAR USUÁRIO (incluindo senha) ---
+router.put('/users/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { currentPassword, newPassword, name, role } = req.body;
+    
+    // Buscar o usuário (incluir a senha para comparação)
+    const user = await User.findById(id).select('+password');
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+
+    // Se a requisição vem para alterar a senha
+    if (currentPassword && newPassword) {
+        // Verificar a senha atual
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Senha atual incorreta.' });
+        }
+        // Atualizar a senha (o hook pre-save irá criptografar)
+        user.password = newPassword;
+    }
+
+    // Atualizar outros campos se fornecidos
+    if (name) user.name = name;
+    if (role && req.user.role === 'admin') { // Apenas admins podem mudar o role
+        user.role = role;
+    }
+
+    await user.save(); // Salvar as alterações (a senha será criptografada se mudou)
+    
+    // Retornar o usuário atualizado (sem a senha)
+    const userToReturn = user.toObject();
+    delete userToReturn.password;
+
+    res.json(userToReturn);
+
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ error: 'Erro interno ao atualizar usuário.' });
+  }
+});
+
+
 module.exports = router;
