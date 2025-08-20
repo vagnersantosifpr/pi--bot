@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AdminApiService, ConversationSnippet, KnowledgeItem, User } from '../admin-api.service';
 import { AuthService } from '../auth.service';
 import { FormsModule } from '@angular/forms'; // 1. Importe o FormsModule
+import { MessageFeedItem } from '../../services/chat-api.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,7 +13,7 @@ import { FormsModule } from '@angular/forms'; // 1. Importe o FormsModule
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-  activeTab: 'history' | 'knowledge' | 'users' = 'history';
+  activeTab: 'history' | 'feed' | 'knowledge' | 'users' = 'history';
 
   userName: string = '';
   userRole: 'admin' | 'viewer' = 'viewer'; // Para controlar permissões
@@ -23,6 +24,8 @@ export class DashboardComponent implements OnInit {
   error: string | null = null;   // Para exibir mensagens de erro
 
   users: User[] = []; // Nova propriedade para armazenar usuários
+  messagesFeed: MessageFeedItem[] = []; // NOVA PROPRIEDADE
+
 
   // Propriedades para o formulário de alteração de senha
   currentPassword = '';
@@ -122,6 +125,8 @@ export class DashboardComponent implements OnInit {
   loadInitialData(): void {
     this.adminApi.getConversationSnippets().subscribe(data => this.conversations = data);
     this.adminApi.getKnowledgeBase().subscribe(data => this.knowledgeBase = data);
+    this.adminApi.getMessagesFeed().subscribe(data => this.messagesFeed = data); // Carrega o feed
+
   }
 
   loadUsers(): void {
@@ -131,7 +136,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  setActiveTab(tab: 'history' | 'knowledge' | 'users'): void {
+  setActiveTab(tab: 'history' | 'feed' | 'knowledge' | 'users'): void {
     this.activeTab = tab;
   }
 

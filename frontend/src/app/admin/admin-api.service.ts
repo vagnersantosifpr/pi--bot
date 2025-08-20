@@ -14,6 +14,18 @@ export type UserUpdatePayload = {
     newPassword?: string;
 };
 
+
+// NOVA INTERFACE PARA A MENSAGEM DO FEED
+ export interface MessageFeedItem {
+   _id: string;
+   userId: string;
+   role: 'user' | 'model';
+   text: string;
+   timestamp: string;
+ }
+
+
+
 // (Defina as interfaces para os dados aqui para ter um código mais tipado e seguro)
 export interface ConversationSnippet {
     _id: string;
@@ -88,6 +100,12 @@ export class AdminApiService {
     createKnowledgeItem(item: { source: string; topic: string; content: string }): Observable<KnowledgeItem> {
         return this.http.post<KnowledgeItem>(`${this.apiUrl}/knowledge`, item);
     }
+
+    // NOVO MÉTODO PARA O FEED DE MENSAGENS
+       getMessagesFeed(): Observable<MessageFeedItem[]> {
+         return this.http.get<MessageFeedItem[]>(`${this.apiUrl}/messages`);
+       }
+       
 
     // --- Métodos de Usuário (a serem implementados depois) ---
     // getUsers(): Observable<any[]> { ... }

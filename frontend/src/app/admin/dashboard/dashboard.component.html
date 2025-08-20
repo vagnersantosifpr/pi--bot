@@ -9,8 +9,9 @@
 
     <main class="dashboard-content">
         <nav class="tabs">
-            <button (click)="setActiveTab('history')" [class.active]="activeTab === 'history'">Histórico de
-                Conversas</button>
+            <button (click)="setActiveTab('history')" [class.active]="activeTab === 'history'">Histórico (por
+                Conversa)</button>
+            <button (click)="setActiveTab('feed')" [class.active]="activeTab === 'feed'">Feed de Mensagens</button>
             <button (click)="setActiveTab('knowledge')" [class.active]="activeTab === 'knowledge'">Base de
                 Conhecimento</button>
             <button (click)="setActiveTab('users')" [class.active]="activeTab === 'users'">Gerenciar Usuários</button>
@@ -56,6 +57,32 @@
                 </table>
             </div>
 
+            <!-- NOVA ABA DE FEED DE MENSAGENS -->
+            <div *ngIf="activeTab === 'feed'">
+                <h2>Últimas Interações (Feed)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Autor</th>
+                            <th>Mensagem</th>
+                            <th>ID do Usuário</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let msg of messagesFeed" [ngClass]="'role-' + msg.role">
+                            <td>{{ msg.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                            <td>
+                                <span class="role-tag">{{ msg.role === 'user' ? 'Usuário' : 'Piá-bot' }}</span>
+                            </td>
+                            <td>{{ msg.text }}</td>
+                            <td>
+                                <span class="user-id" title="{{ msg.userId }}">{{ msg.userId | slice:0:8 }}...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <!-- CONTEÚDO DA ABA DE BASE DE CONHECIMENTO -->
             <div *ngIf="activeTab === 'knowledge'">

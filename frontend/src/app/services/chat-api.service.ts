@@ -8,6 +8,17 @@ export interface ChatResponse {
   reply: string;
 }
 
+
+// NOVA INTERFACE PARA A MENSAGEM DO FEED
+ export interface MessageFeedItem {
+   _id: string;
+   userId: string;
+   role: 'user' | 'model';
+   text: string;
+   timestamp: string;
+ }
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -21,4 +32,10 @@ export class ChatApiService {
     const body = { userId, message, piabot_temperature: temperature };
     return this.http.post<ChatResponse>(this.apiUrl, body);
   }
+
+  // NOVO MÉTODO PARA O FEED DE MENSAGENS
+   getMessagesFeed(): Observable<MessageFeedItem[]> {
+     return this.http.get<MessageFeedItem[]>(`${this.apiUrl}/messages`);
+   }
+   
 }
