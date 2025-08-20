@@ -65,6 +65,38 @@ router.get('/conversations/:id', async (req, res) => { // <-- VERIFIQUE ESTA FUN
   }
 });
 
+// --- NOVA ROTA PARA O FEED DE MENSAGENS INDIVIDUAIS ---
+router.get('/messages', authMiddleware, async (req, res) => {
+  try {
+    const messagesFeed = await Conversation.aggregate([
+      // 1. Desconstrói o array 'messages', criando um documento para cada mensagem
+      { $unwind: '$messages' },
+
+      // 2. Ordena todos os documentos resultantes pelo timestamp da mensagem, em ordem decrescente (mais recentes primeiro)
+      { $sort: { 'messages.timestamp': -1 } },
+
+      // 3. Limita o resultado às 100 mensagens mais recentes (para performance)
+      { $limit: 100 },
+
+      // 4. Formata o resultado para ser mais fácil de usar no frontend
+      {
+        $project: {
+          _id: '$messages._id', // ID da mensagem
+          userId: '$userId',
+          role: '$messages.role',
+          text: '$messages.text',
+          timestamp: '$messages.timestamp'
+        }
+      }
+    ]);
+
+    res.json(messagesFeed);
+  } catch (error) {
+    console.error('Erro ao buscar o feed de mensagens:', error);
+    res.status(500).json({ error: 'Erro ao buscar o feed de mensagens.' });
+  }
+});
+
 // --- ROTAS PARA BASE DE CONHECIMENTO ---
 router.get('/knowledge', async (req, res) => { // <-- VERIFIQUE ESTA FUNÇÃO
   try {
