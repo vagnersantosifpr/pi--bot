@@ -1,14 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { AdminApiService, ConversationSnippet, KnowledgeItem, User } from '../admin-api.service';
 import { AuthService } from '../auth.service';
-import { FormsModule } from '@angular/forms'; // 1. Importe o FormsModule
 import { MessageFeedItem } from '../../services/chat-api.service';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -48,6 +51,10 @@ export class DashboardComponent implements OnInit {
   searchTerm: string = '';
   editingItem: KnowledgeItem | null = null;
 
+  // NOVO: FormControl para a barra de busca
+  searchControl = new FormControl('');
+  private destroy$ = new Subject<void>(); // Para gerenciar a subscrição
+
   selectedConversation: any = null;
 
   constructor(
@@ -74,6 +81,37 @@ export class DashboardComponent implements OnInit {
     // Carregue os outros dados também
     this.loadKnowledgeBase();
 
+    this.setupSearch(); // Configura a busca reativa
+
+
+  }
+
+  ngOnDestroy(): void {
+    // Limpa a subscrição para evitar vazamentos de memória
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+   // NOVO MÉTODO: Configura a busca com debounce
+  setupSearch(): void {
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300), // Espera 300ms após o usuário parar de digitar
+      distinctUntilChanged(), // Só emite se o valor realmente mudou
+      takeUntil(this.destroy$) // Cancela a subscrição quando o componente é destruído
+    ).subscribe(searchTerm => {
+      this.loadKnowledgeBase(searchTerm || ''); // Chama a busca com o novo termo
+    });
+  }
+
+  loadKnowledgeBase(searchTerm: string = ''): void { // Modificado para aceitar o termo
+    console.log(`Buscando base de conhecimento com o termo: "${searchTerm}"`);
+    this.adminApi.getKnowledgeBase(searchTerm).subscribe({
+      next: (data) => {
+        this.knowledgeBase = data;
+        console.log("Base de conhecimento carregada:", data);
+      },
+      error: (err) => console.error("Erro ao buscar base de conhecimento:", err)
+    });
   }
 
   loadConversations(): void {
@@ -95,7 +133,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  loadKnowledgeBase(): void {
+  loadKnowledgeBase1(): void {
     console.log("Buscando base de conhecimento..."); // Log de depuração
 
     this.adminApi.getKnowledgeBase(this.searchTerm).subscribe({
