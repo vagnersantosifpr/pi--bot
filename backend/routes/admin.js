@@ -98,9 +98,33 @@ router.get('/messages', authMiddleware, async (req, res) => {
 });
 
 // --- ROTAS PARA BASE DE CONHECIMENTO ---
-router.get('/knowledge', async (req, res) => { // <-- VERIFIQUE ESTA FUNÇÃO
+router.get('/knowledgePublic', async (req, res) => { // <-- VERIFIQUE ESTA FUNÇÃO
   try {
-    const knowledgeItems = await Knowledge.find({}).select('-embedding');
+    const searchTerm = req.query.q ? String(req.query.q).trim() : '';
+
+    // Adiciona um log para ver exatamente o que o servidor está recebendo
+    console.log(`[Backend] Recebido termo de busca: "${searchTerm}"`);
+
+    let query = {};
+
+    if (searchTerm) {
+      // Cria uma query que busca o termo no 'topic' OU no 'content'
+      // A opção 'i' torna a busca case-insensitive (não diferencia maiúsculas de minúsculas)
+      const escapedSearchTerm = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+
+      query = {
+        $or: [
+          { topic: { $regex: escapedSearchTerm, $options: 'i' } },
+          { content: { $regex: escapedSearchTerm, $options: 'i' } }
+        ]
+      };
+    }
+
+    console.log('[Backend] Executando a query no MongoDB:', JSON.stringify(query));
+
+
+    const knowledgeItems = await Knowledge.find(query).select('-embedding').sort({ topic: 1 });
     res.json(knowledgeItems);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar base de conhecimento.' });
