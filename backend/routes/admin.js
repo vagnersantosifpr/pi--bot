@@ -29,11 +29,11 @@ const authMiddleware = (req, res, next) => {
 
 // Middleware para verificar se o usuário é Admin
 const adminOnly = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') {
-        next();
-    } else {
-        res.status(403).json({ error: 'Acesso negado: privilégios de administrador necessários.' });
-    }
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ error: 'Acesso negado: privilégios de administrador necessários.' });
+  }
 };
 
 
@@ -150,13 +150,13 @@ router.post('/knowledge', adminOnly, async (req, res) => {
       content,
       embedding,
     });
-    
+
     // Retorna o item criado (sem o vetor gigante do embedding) para o frontend
     const itemToReturn = newKnowledgeItem.toObject();
     delete itemToReturn.embedding;
 
     res.status(201).json(itemToReturn);
-    
+
   } catch (error) {
     console.error('Erro ao adicionar item de conhecimento:', error);
     res.status(500).json({ error: 'Erro interno ao processar a solicitação.' });
@@ -166,32 +166,32 @@ router.post('/knowledge', adminOnly, async (req, res) => {
 // --- NOVAS ROTAS PARA MANUTENÇÃO DE USUÁRIOS ---
 // Apenas admins podem gerenciar usuários
 router.get('/users', adminOnly, async (req, res) => {
-    try {
-        const users = await User.find({});
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar usuários.' });
-    }
+  try {
+    const users = await User.find({});
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar usuários.' });
+  }
 });
 
 router.post('/users', adminOnly, async (req, res) => {
-    try {
-        const { email, password, name, role } = req.body;
-        const newUser = new User({ email, password, name, role });
-        await newUser.save();
-        res.status(201).json(newUser);
-    } catch (error) {
-        res.status(400).json({ error: 'Erro ao criar usuário.', details: error.message });
-    }
+  try {
+    const { email, password, name, role } = req.body;
+    const newUser = new User({ email, password, name, role });
+    await newUser.save();
+    res.status(201).json(newUser);
+  } catch (error) {
+    res.status(400).json({ error: 'Erro ao criar usuário.', details: error.message });
+  }
 });
 
 router.delete('/users/:id', adminOnly, async (req, res) => {
-    try {
-        await User.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Usuário deletado.' });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao deletar usuário.' });
-    }
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Usuário deletado.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao deletar usuário.' });
+  }
 });
 
 // --- NOVA ROTA PARA ATUALIZAR USUÁRIO (incluindo senha) ---
@@ -199,7 +199,7 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { currentPassword, newPassword, name, role } = req.body;
-    
+
     // Buscar o usuário (incluir a senha para comparação)
     const user = await User.findById(id).select('+password');
     if (!user) {
@@ -208,23 +208,23 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
 
     // Se a requisição vem para alterar a senha
     if (currentPassword && newPassword) {
-        // Verificar a senha atual
-        const isMatch = await user.comparePassword(currentPassword);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Senha atual incorreta.' });
-        }
-        // Atualizar a senha (o hook pre-save irá criptografar)
-        user.password = newPassword;
+      // Verificar a senha atual
+      const isMatch = await user.comparePassword(currentPassword);
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Senha atual incorreta.' });
+      }
+      // Atualizar a senha (o hook pre-save irá criptografar)
+      user.password = newPassword;
     }
 
     // Atualizar outros campos se fornecidos
     if (name) user.name = name;
     if (role && req.user.role === 'admin') { // Apenas admins podem mudar o role
-        user.role = role;
+      user.role = role;
     }
 
     await user.save(); // Salvar as alterações (a senha será criptografada se mudou)
-    
+
     // Retornar o usuário atualizado (sem a senha)
     const userToReturn = user.toObject();
     delete userToReturn.password;
@@ -238,69 +238,78 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
 });
 
 // ROTA GET MODIFICADA para suportar busca textual (LIKE/contains)
- router.get('/knowledge', authMiddleware, async (req, res) => {
-   try {
-     const searchTerm = req.query.q; // Pega o parâmetro de busca ?q=...
-     let query = {};
+router.get('/knowledge', authMiddleware, async (req, res) => {
+  try {
+    const searchTerm = req.query.q ? String(req.query.q).trim() : '';
 
-     if (searchTerm) {
-       // Cria uma query que busca o termo no 'topic' OU no 'content'
-       // A opção 'i' torna a busca case-insensitive (não diferencia maiúsculas de minúsculas)
-       query = {
-         $or: [
-           { topic: { $regex: searchTerm, $options: 'i' } },
-           { content: { $regex: searchTerm, $options: 'i' } }
-         ]
-       };
-     }
+    // Adiciona um log para ver exatamente o que o servidor está recebendo
+    console.log(`[Backend] Recebido termo de busca: "${searchTerm}"`);
 
-     const knowledgeItems = await Knowledge.find(query).select('-embedding');
-     res.json(knowledgeItems);
-   } catch (error) {
-     res.status(500).json({ error: 'Erro ao buscar base de conhecimento.' });
-   }
- });
+    let query = {};
 
- // NOVA ROTA PUT para atualizar um item e regerar o embedding
- router.put('/knowledge/:id', adminOnly, async (req, res) => {
-   try {
-     const { id } = req.params;
-     const { source, topic, content } = req.body;
+    if (searchTerm) {
+      // Cria uma query que busca o termo no 'topic' OU no 'content'
+      // A opção 'i' torna a busca case-insensitive (não diferencia maiúsculas de minúsculas)
+      const escapedSearchTerm = searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
-     if (!source || !topic || !content) {
-       return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
-     }
 
-     // Regera o embedding para o conteúdo ATUALIZADO
-     console.log(`Regerando embedding para o tópico atualizado: "${topic}"`);
-     const result = await embeddingModel.embedContent(content);
-     const newEmbedding = result.embedding.values;
+      query = {
+        $or: [
+          { topic: { $regex: escapedSearchTerm, $options: 'i' } },
+          { content: { $regex: escapedSearchTerm, $options: 'i' } }
+        ]
+      };
+    }
 
-     // Encontra o item pelo ID e atualiza todos os campos, incluindo o novo embedding
-     const updatedItem = await Knowledge.findByIdAndUpdate(
-       id,
-       {
-         source,
-         topic,
-         content,
-         embedding: newEmbedding
-       },
-       { new: true } // Retorna o documento atualizado
-     );
+    console.log('[Backend] Executando a query no MongoDB:', JSON.stringify(query));
 
-     if (!updatedItem) {
-       return res.status(404).json({ error: 'Item de conhecimento não encontrado.' });
-     }
-     
-     const itemToReturn = updatedItem.toObject();
-     delete itemToReturn.embedding;
 
-     res.json(itemToReturn);
-   } catch (error)
-    {
-     console.error('Erro ao atualizar item de conhecimento:', error);
-     res.status(500).json({ error: 'Erro interno ao atualizar item.' });
-   }
- });
+    const knowledgeItems = await Knowledge.find(query).select('-embedding').sort({ topic: 1 });
+    res.json(knowledgeItems);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar base de conhecimento.' });
+  }
+});
+
+// NOVA ROTA PUT para atualizar um item e regerar o embedding
+router.put('/knowledge/:id', adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { source, topic, content } = req.body;
+
+    if (!source || !topic || !content) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+    }
+
+    // Regera o embedding para o conteúdo ATUALIZADO
+    console.log(`Regerando embedding para o tópico atualizado: "${topic}"`);
+    const result = await embeddingModel.embedContent(content);
+    const newEmbedding = result.embedding.values;
+
+    // Encontra o item pelo ID e atualiza todos os campos, incluindo o novo embedding
+    const updatedItem = await Knowledge.findByIdAndUpdate(
+      id,
+      {
+        source,
+        topic,
+        content,
+        embedding: newEmbedding
+      },
+      { new: true } // Retorna o documento atualizado
+    );
+
+    if (!updatedItem) {
+      return res.status(404).json({ error: 'Item de conhecimento não encontrado.' });
+    }
+
+    const itemToReturn = updatedItem.toObject();
+    delete itemToReturn.embedding;
+
+    res.json(itemToReturn);
+  } catch (error) {
+    console.error('Erro ao atualizar item de conhecimento:', error);
+    res.status(500).json({ error: 'Erro interno ao atualizar item.' });
+  }
+});
 
 module.exports = router;
