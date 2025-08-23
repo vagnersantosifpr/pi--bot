@@ -88,10 +88,19 @@ export class AdminApiService {
         return this.http.get<any>(`${this.apiUrl}/conversations/${id}`);
     }
 
-    // --- Métodos de Base de Conhecimento ---
-    getKnowledgeBase(): Observable<KnowledgeItem[]> {
-        return this.http.get<KnowledgeItem[]>(`${this.apiUrl}/knowledge`);
-    }
+    // MODIFICADO: Aceita um termo de busca opcional
+   getKnowledgeBase(searchTerm?: string): Observable<KnowledgeItem[]> {
+     let url = `${this.apiUrl}/knowledge`;
+     if (searchTerm) {
+       url += `?q=${encodeURIComponent(searchTerm)}`;
+     }
+     return this.http.get<KnowledgeItem[]>(url);
+   }
+
+   // NOVO MÉTODO: Para atualizar um item
+   updateKnowledgeItem(id: string, itemData: { source: string; topic: string; content: string }): Observable<KnowledgeItem> {
+     return this.http.put<KnowledgeItem>(`${this.apiUrl}/knowledge/${id}`, itemData);
+   }
 
     deleteKnowledgeItem(id: string): Observable<any> {
         return this.http.delete(`${this.apiUrl}/knowledge/${id}`);

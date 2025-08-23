@@ -338,3 +338,22 @@ table button.danger {
  tr.role-model td .role-tag {
    background-color: #28a745; // Verde para o bot
  }
+
+ .search-bar {
+   margin-bottom: 20px;
+   input {
+     width: 100%;
+     padding: 10px 15px;
+     font-size: 1rem;
+     border: 1px solid #ccc;
+     border-radius: 4px;
+     box-sizing: border-box;
+   }
+ }
+ 
+ table button.edit {
+   background-color: #ffc107; // Amarelo para edição
+   margin-right: 5px;
+   &:hover { background-color: #e0a800; }
+ }
+ 

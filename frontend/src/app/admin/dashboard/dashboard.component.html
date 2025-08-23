@@ -116,6 +116,12 @@
 
                 <hr class="divider">
 
+                <!-- CAMPO DE BUSCA -->
+                <div class="search-bar">
+                    <input type="text" placeholder="Pesquisar por tópico ou conteúdo..." [(ngModel)]="searchTerm"
+                        (input)="onSearch()">
+                </div>
+
                 <table>
                     <thead>
                         <tr>
@@ -135,11 +141,41 @@
                             <td><strong>{{ item.topic }}</strong></td>
                             <td>{{ item.content | slice:0:100 }}...</td>
                             <td><span class="source-tag">{{ item.source }}</span></td>
+                            <button class="edit" (click)="openEditModal(item)">Editar</button> <!-- NOVO BOTÃO -->
                             <td><button class="danger" (click)="deleteKnowledgeItem(item._id)">Excluir</button></td>
                         </tr>
                     </tbody>
                 </table>
 
+            </div>
+
+
+            <!-- MODAL DE EDIÇÃO -->
+            <div class="modal-overlay" *ngIf="editingItem">
+                <div class="modal-content">
+                    <button class="close-btn" (click)="editingItem = null">&times;</button>
+                    <h3>Editando Item</h3>
+                    <form (ngSubmit)="onUpdateKnowledgeSubmit()">
+                        <div class="form-group">
+                            <label for="edit-topic">Tópico</label>
+                            <input type="text" id="edit-topic" [(ngModel)]="editingItem.topic" name="editTopic"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-source">Fonte</label>
+                            <input type="text" id="edit-source" [(ngModel)]="editingItem.source" name="editSource"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-content">Conteúdo</label>
+                            <textarea id="edit-content" [(ngModel)]="editingItem.content" name="editContent" rows="6"
+                                required></textarea>
+                        </div>
+                        <button type="submit" [disabled]="isSubmitting">
+                            {{ isSubmitting ? 'Salvando...' : 'Salvar Alterações' }}
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- CONTEÚDO DA ABA DE USUÁRIOS (placeholder) -->

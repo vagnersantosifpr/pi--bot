@@ -237,5 +237,70 @@ router.put('/users/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ROTA GET MODIFICADA para suportar busca textual (LIKE/contains)
+ router.get('/knowledge', authMiddleware, async (req, res) => {
+   try {
+     const searchTerm = req.query.q; // Pega o parâmetro de busca ?q=...
+     let query = {};
+
+     if (searchTerm) {
+       // Cria uma query que busca o termo no 'topic' OU no 'content'
+       // A opção 'i' torna a busca case-insensitive (não diferencia maiúsculas de minúsculas)
+       query = {
+         $or: [
+           { topic: { $regex: searchTerm, $options: 'i' } },
+           { content: { $regex: searchTerm, $options: 'i' } }
+         ]
+       };
+     }
+
+     const knowledgeItems = await Knowledge.find(query).select('-embedding');
+     res.json(knowledgeItems);
+   } catch (error) {
+     res.status(500).json({ error: 'Erro ao buscar base de conhecimento.' });
+   }
+ });
+
+ // NOVA ROTA PUT para atualizar um item e regerar o embedding
+ router.put('/knowledge/:id', adminOnly, async (req, res) => {
+   try {
+     const { id } = req.params;
+     const { source, topic, content } = req.body;
+
+     if (!source || !topic || !content) {
+       return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+     }
+
+     // Regera o embedding para o conteúdo ATUALIZADO
+     console.log(`Regerando embedding para o tópico atualizado: "${topic}"`);
+     const result = await embeddingModel.embedContent(content);
+     const newEmbedding = result.embedding.values;
+
+     // Encontra o item pelo ID e atualiza todos os campos, incluindo o novo embedding
+     const updatedItem = await Knowledge.findByIdAndUpdate(
+       id,
+       {
+         source,
+         topic,
+         content,
+         embedding: newEmbedding
+       },
+       { new: true } // Retorna o documento atualizado
+     );
+
+     if (!updatedItem) {
+       return res.status(404).json({ error: 'Item de conhecimento não encontrado.' });
+     }
+     
+     const itemToReturn = updatedItem.toObject();
+     delete itemToReturn.embedding;
+
+     res.json(itemToReturn);
+   } catch (error)
+    {
+     console.error('Erro ao atualizar item de conhecimento:', error);
+     res.status(500).json({ error: 'Erro interno ao atualizar item.' });
+   }
+ });
 
 module.exports = router;

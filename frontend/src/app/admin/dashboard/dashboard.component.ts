@@ -44,6 +44,10 @@ export class DashboardComponent implements OnInit {
   isSubmitting = false;
   formError: string | null = null;
 
+  // NOVAS PROPRIEDADES
+  searchTerm: string = '';
+  editingItem: KnowledgeItem | null = null;
+
   selectedConversation: any = null;
 
   constructor(
@@ -94,7 +98,7 @@ export class DashboardComponent implements OnInit {
   loadKnowledgeBase(): void {
     console.log("Buscando base de conhecimento..."); // Log de depuração
 
-    this.adminApi.getKnowledgeBase().subscribe({
+    this.adminApi.getKnowledgeBase(this.searchTerm).subscribe({
       next: (data) => {
         this.knowledgeBase = data;
         console.log("Base de conhecimento carregada com sucesso:", data); // Log de sucesso
@@ -102,6 +106,42 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         console.error("Erro ao buscar base de conhecimento:", err); // Log de erro
         // Opcional: setar uma variável de erro para exibir na tela
+      }
+    });
+  }
+
+  // NOVO MÉTODO: Chamado a cada letra digitada no campo de busca
+  onSearch(): void {
+    this.loadKnowledgeBase();
+  }
+
+  // NOVO MÉTODO: Abre o modal de edição
+  openEditModal(item: KnowledgeItem): void {
+    // Cria uma cópia do item para não modificar a lista diretamente
+    this.editingItem = { ...item };
+  }
+
+  // NOVO MÉTODO: Salva as alterações
+  onUpdateKnowledgeSubmit(): void {
+    if (!this.editingItem) return;
+
+    this.isSubmitting = true;
+    const { _id, topic, source, content } = this.editingItem;
+
+    this.adminApi.updateKnowledgeItem(_id, { topic, source, content }).subscribe({
+      next: (updatedItem) => {
+        // Atualiza o item na lista do frontend
+        const index = this.knowledgeBase.findIndex(item => item._id === _id);
+        if (index !== -1) {
+          this.knowledgeBase[index] = updatedItem;
+        }
+        this.editingItem = null; // Fecha o modal
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error("Erro ao atualizar item:", err);
+        this.isSubmitting = false;
+        // Adicionar feedback de erro para o usuário
       }
     });
   }
