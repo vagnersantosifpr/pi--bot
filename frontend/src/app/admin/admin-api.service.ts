@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 // Crie um novo tipo para o payload de atualização
@@ -16,13 +16,13 @@ export type UserUpdatePayload = {
 
 
 // NOVA INTERFACE PARA A MENSAGEM DO FEED
- export interface MessageFeedItem {
-   _id: string;
-   userId: string;
-   role: 'user' | 'model';
-   text: string;
-   timestamp: string;
- }
+export interface MessageFeedItem {
+    _id: string;
+    userId: string;
+    role: 'user' | 'model';
+    text: string;
+    timestamp: string;
+}
 
 
 
@@ -89,18 +89,24 @@ export class AdminApiService {
     }
 
     // MODIFICADO: Aceita um termo de busca opcional
-   getKnowledgeBase(searchTerm?: string): Observable<KnowledgeItem[]> {
-     let url = `${this.apiUrl}/knowledge`;
-     if (searchTerm) {
-       url += `?q=${encodeURIComponent(searchTerm)}`;
-     }
-     return this.http.get<KnowledgeItem[]>(url);
-   }
+    // MÉTODO CORRIGIDO
+    getKnowledgeBase(searchTerm: string = ''): Observable<KnowledgeItem[]> {
+        const url = `${this.apiUrl}/knowledge`;
+        let params = new HttpParams();
 
-   // NOVO MÉTODO: Para atualizar um item
-   updateKnowledgeItem(id: string, itemData: { source: string; topic: string; content: string }): Observable<KnowledgeItem> {
-     return this.http.put<KnowledgeItem>(`${this.apiUrl}/knowledge/${id}`, itemData);
-   }
+        // Se houver um termo de busca, adicione-o como parâmetro 'q'
+        if (searchTerm) {
+            params = params.set('q', searchTerm);
+        }
+
+        // Passe o objeto de opções com os parâmetros para a requisição GET
+        return this.http.get<KnowledgeItem[]>(url, { params: params });
+    }
+
+    // NOVO MÉTODO: Para atualizar um item
+    updateKnowledgeItem(id: string, itemData: { source: string; topic: string; content: string }): Observable<KnowledgeItem> {
+        return this.http.put<KnowledgeItem>(`${this.apiUrl}/knowledge/${id}`, itemData);
+    }
 
     deleteKnowledgeItem(id: string): Observable<any> {
         return this.http.delete(`${this.apiUrl}/knowledge/${id}`);
@@ -111,10 +117,10 @@ export class AdminApiService {
     }
 
     // NOVO MÉTODO PARA O FEED DE MENSAGENS
-       getMessagesFeed(): Observable<MessageFeedItem[]> {
-         return this.http.get<MessageFeedItem[]>(`${this.apiUrl}/messages`);
-       }
-       
+    getMessagesFeed(): Observable<MessageFeedItem[]> {
+        return this.http.get<MessageFeedItem[]>(`${this.apiUrl}/messages`);
+    }
+
 
     // --- Métodos de Usuário (a serem implementados depois) ---
     // getUsers(): Observable<any[]> { ... }
